@@ -1,0 +1,23 @@
+package graphql
+
+import (
+	"context"
+
+	"{{ .Name }}/internal/service"
+
+	"gitlab.com/go-init/go-init-common/default/logger"
+)
+
+// GQLService обертка над сервисом для GraphQL
+type GQLService struct {
+	logger  *logger.Logger
+	service *service.Service
+}
+
+// New создает новый GraphQL сервис
+func New(log *logger.Logger, name string, svc *service.Service) *GQLService {
+	return &GQLService{
+		logger:  log,
+		service: svc,
+	}
+}

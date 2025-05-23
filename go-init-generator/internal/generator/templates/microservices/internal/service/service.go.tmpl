@@ -1,0 +1,62 @@
+package service
+
+import (
+	"context"
+
+	"{{ .Name }}/internal/database"
+	"{{ .Name }}/internal/database/models"
+
+	"github.com/google/uuid"
+	"gitlab.com/go-init/go-init-common/default/db/pg/orm"
+	"gitlab.com/go-init/go-init-common/default/logger"
+)
+
+// Service - основной сервис, который содержит бизнес-логику
+// и будет использоваться как gRPC, так и GraphQL серверами
+type Service struct {
+	log         *logger.Logger
+	serviceName string
+	agent       *orm.AgentImpl
+	repo        database.DefaultTemplateRepository
+}
+
+// New создает новый экземпляр сервиса
+func New(log *logger.Logger, name string, repo database.DefaultTemplateRepository, agent *orm.AgentImpl) *Service {
+	return &Service{
+		log:         log,
+		serviceName: name,
+		repo:        repo,
+		agent:       agent,
+	}
+}
+
+// CreateUser создаёт нового пользователя
+func (s *Service) CreateUser(ctx context.Context, email, name string) (*models.User, error) {
+	user := &models.User{
+		Email: email,
+		Name:  name,
+	}
+
+	if err := s.repo.CreateUser(ctx, user); err != nil {
+		s.log.Error("Failed to create user", "error", err)
+		return nil, err
+	}
+
+	return user, nil
+}
+
+// CreatePost создаёт новый пост
+func (s *Service) CreatePost(ctx context.Context, userID uuid.UUID, title, content string) (*models.Post, error) {
+	post := &models.Post{
+		UserID:  userID,
+		Title:   title,
+		Content: content,
+	}
+
+	if err := s.repo.CreatePost(ctx, post); err != nil {
+		s.log.Error("Failed to create post", "error", err)
+		return nil, err
+	}
+
+	return post, nil
+}

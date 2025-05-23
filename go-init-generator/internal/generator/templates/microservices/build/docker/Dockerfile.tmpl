@@ -1,0 +1,15 @@
+# Этап сборки
+FROM golang:1.20-alpine AS builder
+WORKDIR /service
+COPY . .
+RUN go build -o service ./cmd
+
+# Этап выполнения
+FROM alpine:latest
+WORKDIR /service
+COPY --from=builder /service/service .
+COPY build/config/* .
+RUN adduser -D service-runner
+USER service-runner
+CMD ["/service/service", "--config", "config.yml"]
+HEALTHCHECK --interval=30s --timeout=5s CMD curl -f http://localhost:8080/health || exit 1

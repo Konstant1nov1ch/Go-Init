@@ -1,0 +1,31 @@
+{{if or .features.hasHTTP .features.hasGraphQL}}
+http_server:
+  env: test 
+  port: 60013
+  timeout: 0s
+  idle_timeout: 60s
+  name: test
+  version: 'dev'
+{{end}}
+
+{{if .features.hasGRPC}}
+grpc_server:
+  port: 60014
+{{end}}
+
+logger:
+  level: DEBUG
+  format: json
+
+{{if .features.hasDatabase}}
+postgres_db:
+  host: localhost
+  port: 5432
+  database_name: postgres
+  user: postgres
+  password: 1234
+  ssl: disable
+  schema: public
+  timezone: "Europe/Moscow"
+  auto_migrate: true
+{{end}}

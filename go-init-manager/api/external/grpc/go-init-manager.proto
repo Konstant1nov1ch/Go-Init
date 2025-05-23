@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+// Имя протокольного пакета (то, что после `package`) может быть любым,
+// это не обязательно совпадает с go_package:
+package pb;
+
+// ВАЖНО: здесь указываем полный Go-модульный путь + алиас (через точку с запятой)
+option go_package = "go-init/pkg/api/grpc/go-init-generate;go_init_generate";
+
+service ManagerService {
+  rpc UpdateGenerationStatus (UpdateGenerationStatusRequest) returns (UpdateGenerationStatusResponse);
+}
+
+message UpdateGenerationStatusRequest {
+  string request_id = 1;  // Уникальный идентификатор запроса
+  string status = 2;      // Новый статус ("completed", "failed" и т.д.)
+  string zip_url = 3;     // URL архива в хранилище (если генерация завершена)
+}
+
+message UpdateGenerationStatusResponse {
+  bool success = 1;       // Успешно ли обновление
+}

@@ -1,0 +1,103 @@
+package database
+
+import (
+	"context"
+
+	"{{ .Name }}/internal/database/models"
+
+	"github.com/google/uuid"
+	"gitlab.com/go-init/go-init-common/default/db/pg/orm"
+	"gitlab.com/go-init/go-init-common/default/logger"
+)
+
+type Repository struct {
+	log    *logger.Logger
+	schema string
+	db     *orm.AgentImpl
+}
+
+func NewDefaultTemplateRepository(db *orm.AgentImpl, log *logger.Logger, schemaName ...string) DefaultTemplateRepository {
+	schema := "default"
+
+	if len(schemaName) > 0 && schemaName[0] != "" {
+		schema = schemaName[0]
+	}
+
+	return &Repository{
+		log:    log,
+		schema: schema,
+		db:     db,
+	}
+}
+
+// CreateUser создает нового пользователя в БД
+func (r *Repository) CreateUser(ctx context.Context, user *models.User) error {
+	r.log.Info("CreateUser: creating user %v", user)
+	return r.db.DB().WithContext(ctx).Create(user).Error
+}
+
+// GetUserByID возвращает пользователя по ID
+func (r *Repository) GetUserByID(ctx context.Context, id uuid.UUID) (*models.User, error) {
+	r.log.Info("GetUserByID: fetching user by id %s", id.String())
+
+	var u models.User
+	if err := r.db.DB().WithContext(ctx).Preload("Posts").Where("id = ?", id).First(&u).Error; err != nil {
+		return nil, err
+	}
+	return &u, nil
+}
+
+// UpdateUser обновляет пользователя в БД
+func (r *Repository) UpdateUser(ctx context.Context, user *models.User) error {
+	r.log.Info("UpdateUser: updating user %v", user)
+	return r.db.DB().WithContext(ctx).Save(user).Error
+}
+
+// DeleteUser удаляет (мягко или физически) пользователя из БД
+// Если хотите именно "мягкое удаление", то в модели User нужно добавить поле gorm.DeletedAt
+func (r *Repository) DeleteUser(ctx context.Context, id uuid.UUID) error {
+	r.log.Info("DeleteUser: deleting user %s", id.String())
+
+	// Физическое удаление:
+	return r.db.DB().WithContext(ctx).Unscoped().Where("id = ?", id).Delete(&models.User{}).Error
+}
+
+// ListUsers возвращает список пользователей (добавьте при необходимости пагинацию)
+func (r *Repository) ListUsers(ctx context.Context) ([]models.User, error) {
+	r.log.Info("ListUsers: fetching all users")
+
+	var users []models.User
+	if err := r.db.DB().WithContext(ctx).Find(&users).Error; err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
+// CreatePost создает новый пост в БД
+func (r *Repository) CreatePost(ctx context.Context, post *models.Post) error {
+	r.log.Info("CreatePost: creating post %v", post)
+	return r.db.DB().WithContext(ctx).Create(post).Error
+}
+
+// GetPostByID возвращает пост по ID
+func (r *Repository) GetPostByID(ctx context.Context, id uuid.UUID) (*models.Post, error) {
+	r.log.Info("GetPostByID: fetching post by id %s", id.String())
+
+	var post models.Post
+	if err := r.db.DB().WithContext(ctx).Preload("User").Where("id = ?", id).First(&post).Error; err != nil {
+		return nil, err
+	}
+	return &post, nil
+}
+
+// UpdatePost обновляет пост в БД
+func (r *Repository) UpdatePost(ctx context.Context, post *models.Post) error {
+	r.log.Info("UpdatePost: updating post %v", post)
+	return r.db.DB().WithContext(ctx).Save(post).Error
+}
+
+// DeletePost удаляет пост из БД
+func (r *Repository) DeletePost(ctx context.Context, id uuid.UUID) error {
+	r.log.Info("DeletePost: deleting post %s", id.String())
+	return r.db.DB().WithContext(ctx).Unscoped().Where("id = ?", id).Delete(&models.Post{}).Error
+}

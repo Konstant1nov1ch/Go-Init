@@ -1,0 +1,114 @@
+# Типы
+enum ServiceProtocol {
+  GRPC
+  REST
+  GRAPHQL
+}
+
+enum ServiceRole {
+  CLIENT
+  SERVER
+}
+
+enum DatabaseType {
+  POSTGRESQL
+  MYSQL
+  NONE
+}
+
+enum TemplateStatus {
+  PENDING     # Ожидает обработки
+  PROCESSING  # В процессе генерации
+  COMPLETED   # Успешно сгенерирован
+  FAILED      # Ошибка генерации
+}
+
+type EndpointConfig {
+  protocol: ServiceProtocol!
+  role: ServiceRole!
+}
+
+type DatabaseConfig {
+  type: DatabaseType!
+  ddl: String
+}
+
+type DockerConfig {
+  registry: String
+  imageName: String!
+}
+
+type AdvancedConfig {
+  enableAuthentication: Boolean
+  generateSwaggerDocs: Boolean
+}
+
+type ServiceTemplate {
+  id: ID!
+  name: String!
+  endpoints: [EndpointConfig]
+  database: DatabaseConfig
+  docker: DockerConfig
+  advanced: AdvancedConfig
+  createdAt: String!
+  updatedAt: String
+  zipUrl: String
+  version: String
+  status: TemplateStatus
+  error: String
+}
+
+input EndpointInput {
+  protocol: ServiceProtocol!
+  role: ServiceRole!
+}
+
+input DatabaseInput {
+  type: DatabaseType!
+  ddl: String
+}
+
+input DockerInput {
+  registry: String
+  imageName: String!
+}
+
+input AdvancedInput {
+  enableAuthentication: Boolean
+  generateSwaggerDocs: Boolean
+}
+
+input CreateTemplateInput {
+  name: String!
+  endpoints: [EndpointInput]
+  database: DatabaseInput
+  docker: DockerInput
+  advanced: AdvancedInput
+}
+
+type TemplateResponse {
+  success: Boolean!
+  message: String
+  template: ServiceTemplate
+}
+
+type TemplatesResponse {
+  success: Boolean!
+  message: String
+  templates: [ServiceTemplate]
+}
+
+# Запросы
+type Query {
+  # Получение конкретного шаблона по ID
+  getTemplate(id: ID!): TemplateResponse!
+  
+  # Получение списка последних шаблонов
+  getRecentTemplates(limit: Int = 5): TemplatesResponse!
+}
+
+# Мутации
+type Mutation {
+  # Создание нового шаблона
+  createTemplate(input: CreateTemplateInput!): TemplateResponse!
+}

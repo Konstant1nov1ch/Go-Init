@@ -1,0 +1,40 @@
+# Тип User
+type User {
+  id: ID!
+  email: String!
+  name: String!
+  posts: [Post!]!
+}
+
+# Тип Post
+type Post {
+  id: ID!
+  title: String!
+  content: String!
+  user: User!
+}
+
+# Запросы (Query)
+type Query {
+  user(id: ID!): User
+  post(id: ID!): Post
+}
+
+# Мутации (Mutation)
+type Mutation {
+  # Операции для пользователей
+  createUser(email: String!, name: String!): User!
+  updateUser(id: ID!, email: String!, name: String!): User!
+  deleteUser(id: ID!): Boolean!
+  
+  # Операции для постов
+  createPost(userId: ID!, title: String!, content: String!): Post!
+  updatePost(id: ID!, title: String!, content: String!): Post!
+  deletePost(id: ID!): Boolean!
+}
+
+# Корневая схема
+schema {
+  query: Query
+  mutation: Mutation
+}

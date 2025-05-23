@@ -1,0 +1,50 @@
+services:
+  # ---------- METRICS STACK ----------
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: go_init_prometheus
+    profiles: ["observe"]
+    ports: ["9090:9090"]
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks: ["go-init-networks"]
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: go_init_grafana
+    profiles: ["observe"]
+    ports: ["3000:3000"]
+    volumes:
+      - ./observability/grafana:/var/lib/grafana
+    networks: ["go-init-networks"]
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: go_init_cadvisor
+    profiles: ["observe"]
+    ports: ["8080:8080"]
+    networks: ["go-init-networks"]
+
+  nodeexporter:
+    image: prom/node-exporter:latest
+    container_name: go_init_nodeexporter
+    profiles: ["observe"]
+    ports: ["9100:9100"]
+    networks: ["go-init-networks"]
+
+  # ---------- LOAD GENERATOR ----------
+# ───────── LOAD-GENERATOR ──────────────────────────────────────────────
+  k6:
+    profiles: ["load"]
+    image: grafana/k6:latest
+    volumes:
+      - ./k6:/scripts               # там лежит full_flow.js
+    environment:
+      - API_URL=http://go_init_manager:60013/graphql
+    command: >
+        run /scripts/full_flow.js
+        --out json=/scripts/metrics.json
+        --summary-export=/scripts/summary.json
+    depends_on:
+      - go_init_manager
+    networks: ["go-init-networks"]

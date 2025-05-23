@@ -1,0 +1,32 @@
+package graphql
+
+import (
+	"context"
+
+	"{{ .Name }}/pkg/api/graphql/model"
+
+	"github.com/google/uuid"
+)
+
+func (s *GQLService) CreatePost(ctx context.Context, req *model.Post) (*model.Post, error) {
+	userID, err := uuid.Parse(req.User.ID)
+	if err != nil {
+		s.logger.Error("Failed to parse user ID", "error", err)
+		return nil, err
+	}
+
+	post, err := s.service.CreatePost(ctx, userID, req.Title, req.Content)
+	if err != nil {
+		s.logger.Error("Failed to create post", "error", err)
+		return nil, err
+	}
+
+	return &model.Post{
+		ID:      post.ID.String(),
+		Title:   post.Title,
+		Content: post.Content,
+		User: &model.User{
+			ID: post.UserID.String(),
+		},
+	}, nil
+}

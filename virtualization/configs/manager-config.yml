@@ -1,0 +1,45 @@
+http_server:
+  env: test 
+  port: 60013
+  timeout: 0s
+  idle_timeout: 60s
+  name: test
+  version: 'dev'
+
+grpc_server:
+  port: 60014
+
+logger:
+  level: DEBUG
+  format: json
+
+postgres_db:
+  host: go_init_pgbouncer   # ← PgBouncer
+  port: 6432                # ← PgBouncer
+  database_name: go_init_manager_db
+  user:     go_init_usr
+  password: 1234
+  ssl:      disable         
+  schema:   public
+  timezone: "Europe/Moscow"
+  auto_migrate: true
+
+
+kafka:
+  enabled: true
+  addresses:
+    - "go_init_kafka:29092"
+  producer_config:
+    enabled: true
+    topics:
+      - id: go-init-processing # Идентификатор топика, используемый в вашем сервисе
+        name: go-init-processing  # Реальное имя топика на брокере Kafka
+        is_enabled: true
+  consumer_config:
+    enabled: true # Enable Kafka consumer for archive-ready events
+    auto_commit: false
+    group_id: go-init-manager-group # Consumer group ID for proper offset management
+    topics:
+      - id: go-init-done # Topic ID for archive ready events
+        name: go-init-done # Actual topic name in Kafka broker
+        is_enabled: true

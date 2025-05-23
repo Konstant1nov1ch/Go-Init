@@ -1,0 +1,278 @@
+package app
+
+import (
+	"context"
+	"fmt"
+	"net"
+	"net/http"
+	"sync"
+	"time"
+
+	"{{ .Name }}/config"
+	"{{ .Name }}/internal/service"
+	{{- if .features.hasGRPC}}
+	"{{ .Name }}/internal/grpc"
+	pb "{{ .Name }}/pkg/api/grpc"
+	"google.golang.org/grpc/reflection"
+	{{- end}}
+	{{- if .features.hasGraphQL}}
+	"{{ .Name }}/internal/graphql"
+	gen_graphql "{{ .Name }}/pkg/api/graphql"
+	myhttp "gitlab.com/go-init/go-init-common/default/http"
+	"gitlab.com/go-init/go-init-common/default/http/server"
+	{{- end}}
+	{{- if .features.hasDatabase}}
+	"{{ .Name }}/internal/database"
+	"{{ .Name }}/internal/database/models"
+	"gitlab.com/go-init/go-init-common/default/db/pg/orm"
+	{{- end}}
+
+	"gitlab.com/go-init/go-init-common/default/closer"
+	"gitlab.com/go-init/go-init-common/default/logger"
+	{{- if .features.hasGRPC}}
+	grpcserver "google.golang.org/grpc"
+	{{- end}}
+)
+
+const (
+	serviceName     = "{{ .Name }}"
+	shutDownTimeOut = time.Second * 5
+)
+
+type App struct {
+	cfg            *config.AppConfig
+	log            *logger.Logger
+	{{- if .features.hasDatabase}}
+	db             *orm.AgentImpl
+	repo           database.DefaultTemplateRepository
+	{{- end}}
+	service        *service.Service
+	{{- if .features.hasGRPC}}
+	grpcService    *grpc.GRPCService
+	grpcServer     *grpcserver.Server
+	lis            net.Listener
+	{{- end}}
+	{{- if .features.hasGraphQL}}
+	graphqlService *graphql.GQLService
+	srv            *http.Server
+	{{- end}}
+}
+
+func New(ctx context.Context) (*App, error) {
+	a := &App{}
+	err := a.initDeps(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return a, nil
+}
+
+func (a *App) initDeps(ctx context.Context) error {
+	inits := []func(context.Context) error{
+		a.initConfig,
+		a.initLogger,
+		a.initCloser,
+		{{- if .features.hasDatabase}}
+		a.initDB,
+		a.initRepo,
+		{{- end}}
+		a.initServices,
+		{{- if .features.hasGraphQL}}
+		a.initHttpServer,
+		{{- end}}
+		{{- if .features.hasGRPC}}
+		a.initGrpcServer,
+		{{- end}}
+	}
+	for _, f := range inits {
+		err := f(ctx)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (a *App) initConfig(_ context.Context) error {
+	a.cfg = config.GetConfig()
+	return nil
+}
+
+func (a *App) initLogger(_ context.Context) error {
+	a.log = logger.New(&a.cfg.Logger, serviceName, "")
+	return nil
+}
+
+func (a *App) initCloser(_ context.Context) error {
+	closer.InitCloser(a.log)
+	return nil
+}
+
+{{- if .features.hasGraphQL}}
+func (a *App) initHttpServer(ctx context.Context) error {
+	// 1. Собираем ExecutableSchema из вашего проекта,
+	//    предполагая, что у вас есть graph.NewExecutableSchema() и свой Resolver
+	schema := gen_graphql.NewExecutableSchema(
+		gen_graphql.Config{
+			Resolvers: &gen_graphql.Resolver{
+				Service: a.graphqlService,
+			},
+		},
+	)
+
+	// 2. Создаём кастомный GraphQL-хендлер через пакет mygraphql
+	gqlHandler := server.NewGraphQLServer(schema)
+
+	// 3. Подготовим ( handler для метрик.
+	//    Когда захотите Prometheus / OTEL - тут подключаете
+	metricsHandler := http.NotFoundHandler()
+
+	// 4. Собираем middleware (логирование, CORS и т.д.) через пакет myhttp
+	middlewares := myhttp.CollectHandlers(
+	// например, myAuthMiddleware, myLoggerMiddleware...
+	)
+
+	s := server.NewServer(
+		&a.cfg.HttpServ,
+		gqlHandler,
+		metricsHandler,
+		middlewares,
+	)
+	closer.Add(func() error {
+		cancelCtx, cancel := context.WithTimeout(ctx, shutDownTimeOut)
+		defer cancel()
+		if err := s.Shutdown(cancelCtx); err != nil {
+			return fmt.Errorf("failed to stop server: %w", err)
+		}
+		a.log.Info("Http server stopped")
+		return nil
+	})
+
+	a.srv = &s.Server
+	return nil
+}
+{{- end}}
+
+{{- if .features.hasDatabase}}
+func (a *App) initDB(_ context.Context) error {
+	agent, err := orm.NewAgent(&a.cfg.Database, a.log)
+	if err != nil {
+		return fmt.Errorf("failed to create DB agent: %w", err)
+	}
+	a.db = agent
+
+	// Миграция моделей
+	if err := a.db.DB().AutoMigrate(models.Models...); err != nil {
+		return fmt.Errorf("failed to migrate models: %w", err)
+	}
+
+	return nil
+}
+
+func (a *App) initRepo(_ context.Context) error {
+	a.repo = database.NewDefaultTemplateRepository(a.db, a.log)
+	return nil
+}
+{{- end}}
+
+func (a *App) initServices(_ context.Context) error {
+	{{- if .features.hasDatabase}}
+	a.service = service.New(a.log, serviceName, a.repo, a.db)
+	{{- else}}
+	a.service = service.New(a.log, serviceName)
+	{{- end}}
+	{{- if .features.hasGRPC}}
+	a.grpcService = grpc.New(a.log, serviceName, a.service)
+	{{- end}}
+	{{- if .features.hasGraphQL}}
+	a.graphqlService = graphql.New(a.log, serviceName, a.service)
+	{{- end}}
+	return nil
+}
+
+{{- if .features.hasGRPC}}
+func (a *App) initGrpcServer(_ context.Context) error {
+	// Создаем gRPC сервер
+	server := grpcserver.NewServer()
+
+	// Регистрируем сервисы
+	pb.RegisterUserServiceServer(server, a.grpcService)
+	reflection.Register(server)
+
+	// Сохраняем сервер
+	a.grpcServer = server
+
+	// Создаем слушателя TCP
+	port := a.cfg.GrpcServ.Port
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", port))
+	if err != nil {
+		return fmt.Errorf("failed to create listener on port %s: %w", port, err)
+	}
+	a.lis = listener
+
+	return nil
+}
+
+func (a *App) runGrpcServer() error {
+	a.log.Info(fmt.Sprintf("Запуск gRPC сервера на %s", a.cfg.GrpcServ.Port))
+
+	if err := a.grpcServer.Serve(a.lis); err != nil {
+		a.log.Error(fmt.Sprintf("Ошибка gRPC сервера: %v", err))
+		return err
+	}
+
+	return nil
+}
+{{- end}}
+
+{{- if .features.hasGraphQL}}
+func (a *App) runHttpServer() error {
+	a.log.Info(fmt.Sprintf("Запуск HTTP сервера на %s", a.srv.Addr))
+	err := a.srv.ListenAndServe()
+	if err != nil && err != http.ErrServerClosed {
+		a.log.Error(fmt.Sprintf("Ошибка HTTP сервера: %v", err))
+		return err
+	}
+	return nil
+}
+{{- end}}
+
+func (a *App) Run() error {
+	defer func() {
+		closer.CloseAll()
+		closer.Wait()
+	}()
+
+	{{- if or .features.hasGRPC .features.hasGraphQL}}
+	wg := sync.WaitGroup{}
+	{{- if and .features.hasGRPC .features.hasGraphQL}}
+	wg.Add(2)
+	{{- else}}
+	wg.Add(1)
+	{{- end}}
+
+	{{- if .features.hasGraphQL}}
+	go func() {
+		defer wg.Done()
+		err := a.runHttpServer()
+		if err != nil {
+			a.log.Error(fmt.Sprintf("Failed to start http server: %v", err))
+		}
+	}()
+	{{- end}}
+
+	{{- if .features.hasGRPC}}
+	go func() {
+		defer wg.Done()
+		err := a.runGrpcServer()
+		if err != nil {
+			a.log.Error(fmt.Sprintf("Failed to start grpc server: %v", err))
+		}
+	}()
+	{{- end}}
+
+	wg.Wait()
+	{{- end}}
+
+	return nil
+}

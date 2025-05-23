@@ -1,0 +1,36 @@
+package config
+
+import (
+	"github.com/mcuadros/go-defaults"
+	c "gitlab.com/go-init/go-init-common/default/config"
+	{{if .features.hasDatabase}}
+	"gitlab.com/go-init/go-init-common/default/db/pg"
+	{{end}}
+	{{if .features.hasGRPC}}
+	"gitlab.com/go-init/go-init-common/default/grpcpkg"
+	{{end}}
+	{{if .features.hasGraphQL}}
+	"gitlab.com/go-init/go-init-common/default/http/server"
+	{{end}}
+	"gitlab.com/go-init/go-init-common/default/logger"
+)
+
+type AppConfig struct {
+	Logger   logger.Config        `yaml:"logger"`
+	{{if .features.hasDatabase}}
+	Database pg.Config            `yaml:"postgres_db"`
+	{{end}}
+	{{if .features.hasGRPC}}
+	GRPC     grpcpkg.ServerConfig `yaml:"grpc_server"`
+	{{end}}
+	{{if .features.hasGraphQL}}
+	HttpServ server.Config        `yaml:"http_server"`
+	{{end}}
+}
+
+func GetConfig() *AppConfig {
+	config := &AppConfig{}
+	c.OpenConfig(&config)
+	defaults.SetDefaults(&config.Logger)
+	return config
+}

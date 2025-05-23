@@ -1,0 +1,21 @@
+/virtualization/data/*
+apply-rules.sh
+# Go
+/bin/
+/.cursor
+
+# IDE
+.idea/
+.vscode/
+
+go.work*
+
+.DS_Store
+__debug_*
+
+# Exclude large metrics files
+virtualization/k6/metrics.json
+virtualization/reports/high-load-test-*-metrics.json
+*.json.gz
+virtualization/k6/rps_chart.png
+virtualization/data/go-init-postgres/postgresql/data/*

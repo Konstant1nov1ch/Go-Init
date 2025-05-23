@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 140 140" xmlns="http://www.w3.org/2000/svg">
+  <!-- фирменный циан -->
+  <defs>
+    <linearGradient id="c" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#00ADD8"/>
+      <stop offset="100%" stop-color="#009BC0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- левая скобка -->
+  <path d="M40 20h-15c-5 0-5 5-5 10v30c0 8-5 10-10 10v10c5 0 10 2 10 10v30c0 5 0 10 5 10h15v-10h-10V90c0-11-7-20-15-20
+           8 0 15-9 15-20V30h10z" fill="url(#c)"/>
+
+  <!-- правая скобка (зеркало) -->
+  <g transform="translate(140,0) scale(-1,1)">
+    <path d="M40 20h-15c-5 0-5 5-5 10v30c0 8-5 10-10 10v10c5 0 10 2 10 10v30c0 5 0 10 5 10h15v-10h-10V90
+             c0-11-7-20-15-20 8 0 15-9 15-20V30h10z" fill="url(#c)"/>
+  </g>
+
+  <!-- молния -->
+  <polygon points="70,35 55,75 70,75 50,105 85,60 70,60" fill="#ffffff"/>
+</svg>

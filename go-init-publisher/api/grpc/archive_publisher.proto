@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package archive;
+
+option go_package = "go-init-generator/internal/api/grpc";
+
+// Сервис для публикации архивов
+service ArchivePublisher {
+  // Метод для стриминга архива чанками
+  rpc StreamArchive(stream ArchiveChunk) returns (StreamResponse);
+}
+
+// Чанк архива для потоковой передачи
+message ArchiveChunk {
+  string archive_id = 1; // ID архива для идентификации сессии
+  bytes data = 2;        // Данные чанка
+  bool is_last = 3;      // Флаг последнего чанка в потоке
+  string expected_hash = 4; // SHA-256 хеш всего архива для проверки целостности
+}
+
+// Ответ на стриминг архива
+message StreamResponse {
+  bool success = 1;
+  string message = 2;
+  string archive_path = 3; // Путь к сохраненному архиву
+} 

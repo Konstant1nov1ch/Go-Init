@@ -1,0 +1,98 @@
+# Основные типы данных
+type ServiceTemplate {
+  id: ID!                       # ID всегда обязателен
+  name: String!                 # Имя обязательно
+  endpoints: [EndpointConfig]   # Убрать ! - сделать опциональным
+  database: DatabaseConfig      # Убрать ! - сделать опциональным
+  docker: DockerConfig          # Убрать ! - сделать опциональным
+  advanced: AdvancedConfig     
+  createdAt: String!            # Дата создания всегда должна быть
+  zipUrl: String                # Убрать ! - может быть пустым при создании
+  version: String               # Добавить версию API
+}
+
+input CreateTemplateInput {
+  name: String!                  # Название обязательно
+  endpoints: [EndpointInput]     # Опционально - без восклицательного знака
+  database: DatabaseInput        # Опционально - без восклицательного знака
+  docker: DockerInput            # Опционально - без восклицательного знака  
+  advanced: AdvancedInput        # Опционально - без восклицательного знака
+}
+
+# Конфигурация конечной точки (протокол + роль)
+type EndpointConfig {
+  protocol: ServiceProtocol!  # Тип протокола (gRPC, REST, GraphQL)
+  role: ServiceRole!          # Роль (клиент или сервер)
+}
+
+# Конфигурация базы данных
+type DatabaseConfig {
+  type: DatabaseType!  # Тип БД (PostgreSQL, MySQL, отсутствует)
+  ddl: String          # DDL-скрипт (обязателен, если type != NONE)
+}
+
+# Конфигурация Docker
+type DockerConfig {
+  registry: String     # URL Docker-реестра (например, "docker.io/user")
+  imageName: String!   # Название образа (например, "auth-service")
+}
+
+# Дополнительные настройки
+type AdvancedConfig {
+  enableAuthentication: Boolean  # Включить аутентификацию
+  generateSwaggerDocs: Boolean   # Сгенерировать Swagger для REST
+}
+
+
+input EndpointInput {
+  protocol: ServiceProtocol!  # Выбор протокола
+  role: ServiceRole!          # Выбор роли
+}
+
+input DatabaseInput {
+  type: DatabaseType!  # Тип БД
+  ddl: String          # DDL-скрипт
+}
+
+input DockerInput {
+  registry: String
+  imageName: String!
+}
+
+input AdvancedInput {
+  enableAuthentication: Boolean
+  generateSwaggerDocs: Boolean
+}
+
+# Перечисления
+enum ServiceProtocol {
+  GRPC
+  REST
+  GRAPHQL
+}
+
+enum ServiceRole {
+  CLIENT
+  SERVER
+}
+
+enum DatabaseType {
+  POSTGRESQL
+  MYSQL
+  NONE
+}
+
+# Ответы API
+type TemplateResponse {
+  success: Boolean!     # Успешность операции
+  message: String       # Сообщение об ошибке или успехе
+  template: ServiceTemplate  # Созданный шаблон
+}
+
+type Query {
+  getTemplate(id: ID!): TemplateResponse!  # Получить шаблон по ID
+}
+
+type Mutation {
+  createTemplate(input: CreateTemplateInput!): TemplateResponse!  # Создать шаблон
+}

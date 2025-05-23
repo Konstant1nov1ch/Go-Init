@@ -1,0 +1,8 @@
+# Go
+/bin/
+/.cursor
+
+# IDE
+.idea/
+.vscode/
+

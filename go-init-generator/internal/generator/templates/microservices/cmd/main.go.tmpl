@@ -1,0 +1,24 @@
+package main
+
+import (
+	"context"
+	"log"
+
+	"{{ .Name }}/internal/app"
+)
+
+func main() {
+	ctx := context.Background()
+	a, err := app.New(ctx)
+	if err != nil {
+		log.Fatalf("Failed to initialize app: %v", err)
+		return
+	}
+	
+	log.Printf("Starting {{ .Name }} service")
+	err = a.Run()
+	if err != nil {
+		log.Fatalf("Failed to run app: %v", err)
+		return
+	}
+}

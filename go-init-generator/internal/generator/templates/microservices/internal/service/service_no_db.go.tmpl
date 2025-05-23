@@ -1,0 +1,27 @@
+package service
+
+import (
+	"context"
+
+	"gitlab.com/go-init/go-init-common/default/logger"
+)
+
+// Service - основной сервис, который содержит бизнес-логику
+// и будет использоваться как gRPC, так и GraphQL серверами
+type Service struct {
+	log         *logger.Logger
+	serviceName string
+}
+
+// New создает новый экземпляр сервиса
+func New(log *logger.Logger, name string) *Service {
+	return &Service{
+		log:         log,
+		serviceName: name,
+	}
+}
+
+// GetStatus возвращает статус сервиса
+func (s *Service) GetStatus(ctx context.Context) (string, error) {
+	return "OK", nil
+} 

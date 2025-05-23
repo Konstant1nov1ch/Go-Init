@@ -1,0 +1,42 @@
+grpc_server:
+  port: 60024
+
+logger:
+  level: DEBUG
+  format: json
+
+postgres_db:
+  host: go_init_postgres
+  port: 5432
+  database_name: go_init_manager_db
+  user: go_init_usr
+  password: 1234
+  ssl: disable
+  schema: go_init
+  timezone: "Europe/Moscow"
+  auto_migrate: true
+
+kafka:
+  enabled: true
+  addresses:
+    - "go_init_kafka:29092"
+  producer_config:
+    enabled: true
+    topics:
+      - id: go-init-done # Идентификатор топика для отправки события о готовности архива
+        name: go-init-done  # Реальное имя топика на брокере Kafka
+        is_enabled: true
+  consumer_config:
+    enabled: false # Установите в true, если ваш сервис потребляет сообщения из Kafka
+    auto_commit: false
+
+minio:
+  access_key_id: B6NZaLCC7AmyqSkdB2Rr
+  secret_access_key: C8gZg0GSg31mEUs3BRVj7Dh5nIZ4HCvMPEHEamYq
+  use_ssl: false
+  default_bucket: go-init-archives
+  endpoint: host.docker.internal:9000                      # для работы с фронтом -  host.docker.internal:9000          для локальной разработки - localhost:9000
+  public_access_url: http://localhost:9005/minio                 # для локальной разработки - "http://localhost:9000"         для работы с фронтом - http://localhost:9005/minio
+
+storage:
+  path: "/service/storage"

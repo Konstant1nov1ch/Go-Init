@@ -1,0 +1,21 @@
+package graphql
+
+import (
+	"context"
+
+	"{{ .Name }}/pkg/api/graphql/model"
+)
+
+func (s *GQLService) CreateUser(ctx context.Context, req *model.User) (*model.User, error) {
+	user, err := s.service.CreateUser(ctx, req.Email, req.Name)
+	if err != nil {
+		s.logger.Error("Failed to create user", "error", err)
+		return nil, err
+	}
+
+	return &model.User{
+		ID:    user.ID.String(),
+		Email: user.Email,
+		Name:  user.Name,
+	}, nil
+}

@@ -1,0 +1,28 @@
+grpc_server:
+  port: 60024
+
+logger:
+  level: DEBUG
+  format: json
+
+kafka:
+  enabled: true
+  addresses:
+    - "localhost:9092"
+  producer_config:
+    enabled: true
+    topics:
+      - id: go-init-done # Идентификатор топика для отправки события о готовности архива
+        name: go-init-done  # Реальное имя топика на брокере Kafka
+        is_enabled: true
+  consumer_config:
+    enabled: false # Установите в true, если ваш сервис потребляет сообщения из Kafka
+    auto_commit: false
+
+minio:
+  endpoint: "localhost:9000"
+  access_key_id: B6NZaLCC7AmyqSkdB2Rr
+  secret_access_key: C8gZg0GSg31mEUs3BRVj7Dh5nIZ4HCvMPEHEamYq
+  use_ssl: false
+  default_bucket: "go-init-archives"
+  external_url: "http://localhost:9000"

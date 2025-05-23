@@ -1,0 +1,4 @@
+# Exclude large metrics files
+metrics.json
+*.json.gz
+rps_chart.png 

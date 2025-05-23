@@ -1,0 +1,50 @@
+{
+  "name": "frontend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "clean": "rm -rf node_modules/.vite",
+    "reset": "rm -rf node_modules/.vite && npm ci",
+    "dev:clear": "vite --force",
+    "proxy": "node cors-proxy.js",
+    "dev:cors": "concurrently \"npm run dev\" \"npm run proxy\""
+  },
+  "dependencies": {
+    "@apollo/client": "^3.13.8",
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.0",
+    "@mui/icons-material": "^7.0.2",
+    "@mui/lab": "^7.0.0-beta.11",
+    "@mui/material": "^7.0.2",
+    "date-fns": "^4.1.0",
+    "graphql": "^16.10.0",
+    "notistack": "^3.0.2",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-hook-form": "^7.56.0",
+    "react-icons": "^5.5.0",
+    "react-router-dom": "^7.5.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.22.0",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^8.2.2",
+    "cors": "^2.8.5",
+    "eslint": "^9.22.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.19",
+    "express": "^4.19.2",
+    "globals": "^16.0.0",
+    "http-proxy-middleware": "^2.0.6",
+    "typescript": "~5.7.2",
+    "typescript-eslint": "^8.26.1",
+    "vite": "^6.3.1"
+  }
+}

@@ -1,0 +1,90 @@
+/* -----------------------------------------------------------------
+   Global Reset + Theme seed (Go init)
+------------------------------------------------------------------ */
+
+/* 1. Box-sizing, margin/padding reset */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+/* 2. Root font / scroll behaviour */
+:root{
+  /* Brand palette */
+  --primary:#00ADD8;
+  --primary-dark:#0087A8;
+  --success:#10b981;
+  --danger:#ef4444;
+  --background-light:#f5f7fa;
+  --background-dark:#1b1d20;
+  --text-light:#374151;
+  --text-dark:#e5e7eb;
+
+  /* Geometry */
+  --radius:8px;
+  --shadow:0 4px 6px -1px rgba(0,0,0,.1),0 2px 4px -1px rgba(0,0,0,.06);
+
+  /* Typography */
+  --font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,
+         Cantarell,'Open Sans','Helvetica Neue',sans-serif;
+  font-size:16px;          /* базовый размер */
+  color-scheme:light dark; /* позволяет авто-тему OS */
+
+  scroll-behavior:smooth;
+}
+
+/* 3. Dark-scheme overrides */
+@media(prefers-color-scheme:dark){
+  :root{
+    --background-light:#1b1d20;
+    --text-light:#e5e7eb;
+  }
+}
+
+/* 4. html & body */
+html,body{
+  width:100%;height:100%;
+  background:var(--background-light);
+  color:var(--text-light);
+  font-family:var(--font);
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  overflow-x:hidden;
+}
+
+/* 5. Responsive root font */
+@media(max-width:768px){html{font-size:14px}}
+@media(max-width:480px){html{font-size:12px}}
+@media(min-width:2000px){html{font-size:18px}}
+
+/* 6. Media elements */
+img,svg,picture,video{display:block;max-width:100%}
+
+/* 7. Text elements */
+h1,h2,h3,h4,h5,h6,p{overflow-wrap:break-word}
+
+/* 8. Lists & links */
+ul,ol{list-style:none}
+a{text-decoration:none;color:inherit}
+
+/* 9. Buttons & form */
+button{
+  background:none;border:none;font:inherit;cursor:pointer
+}
+input,textarea,select{font:inherit;border:none;color:inherit}
+
+/* 10. Focus ring ­— бренд-цвет */
+:focus-visible{
+  outline:3px solid var(--primary);
+  outline-offset:2px;
+}
+
+/* 11. Smooth selection */
+::selection{background:var(--primary);color:#fff}
+
+/* 12. Scrollbar (WebKit) — тонкий и брендовый */
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{
+  background:rgba(0,173,216,.6);
+  border-radius:4px;
+}
+::-webkit-scrollbar-thumb:hover{background:rgba(0,173,216,.8)}

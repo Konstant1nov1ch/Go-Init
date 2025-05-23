@@ -1,0 +1,23 @@
+package grpc
+
+import (
+	"{{ .Name }}/internal/service"
+	pb "{{ .Name }}/pkg/api/grpc"
+
+	"gitlab.com/go-init/go-init-common/default/logger"
+)
+
+// GQLService обертка над сервисом для GraphQL
+type GRPCService struct {
+	logger  *logger.Logger
+	service *service.Service
+	pb.UnimplementedUserServiceServer
+}
+
+// New создает новый GraphQL сервис
+func New(log *logger.Logger, name string, svc *service.Service) *GRPCService {
+	return &GRPCService{
+		logger:  log,
+		service: svc,
+	}
+}

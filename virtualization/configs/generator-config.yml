@@ -1,0 +1,38 @@
+grpc_client:
+  service_id: "go-init-publisher"
+  address: "host.docker.internal:60024"
+  use_tls: false
+
+logger:
+  level: DEBUG
+  format: json
+
+postgres_db:
+  host: go_init_postgres
+  port: 5432
+  database_name: go_init_generator_db
+  user: go_init_usr
+  password: 1234
+  ssl: disable
+  schema: go_init
+  timezone: "Europe/Moscow"
+  auto_migrate: true
+
+kafka:
+  enabled: true
+  addresses:
+    - "go_init_kafka:29092"
+  producer_config:
+    enabled: false
+    topics:
+      - id: go-init-processing # Идентификатор топика, используемый в вашем сервисе
+        name: go-init-processing  # Реальное имя топика на брокере Kafka
+        is_enabled: false
+  consumer_config:
+    enabled: true # Установите в true, если ваш сервис потребляет сообщения из Kafka
+    topics:
+      - id: go-init-processing # Идентификатор топика, используемый в вашем сервисе
+        name: go-init-processing  # Реальное имя топика на брокере Kafka
+        is_enabled: true
+    group_id: go-init-generator-group
+    auto_commit: false
