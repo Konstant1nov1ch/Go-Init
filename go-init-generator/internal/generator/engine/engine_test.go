@@ -62,9 +62,9 @@ func TestGenerator(t *testing.T) {
 	// Create a new generator
 	gen := New()
 
-	// Manually set debug directory for test and pass it the correct path
-	gen.debugArchives = true
-	gen.debugDir = debugDir
+	// Manually set debug directory for test using the new methods
+	gen.SetDebugArchives(true)
+	gen.SetDebugDir(debugDir)
 
 	// Generate the archive
 	archive, err := gen.Generate(ctx, &template)

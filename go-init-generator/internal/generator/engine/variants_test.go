@@ -90,9 +90,9 @@ func TestGenerateServiceVariants(t *testing.T) {
 			// Create a new generator
 			gen := New()
 
-			// Manually set debug directory for test
-			gen.debugArchives = true
-			gen.debugDir = variantDir
+			// Manually set debug directory for test using the new methods
+			gen.SetDebugArchives(true)
+			gen.SetDebugDir(variantDir)
 
 			// Generate the archive
 			archive, err := gen.Generate(ctx, &variant.template)

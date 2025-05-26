@@ -7,12 +7,12 @@ apply-rules.sh
 # IDE
 .idea/
 .vscode/
-
+.cursor/
 go.work*
 
 .DS_Store
 __debug_*
-
+template_*
 # Exclude large metrics files
 virtualization/k6/metrics.json
 virtualization/reports/high-load-test-*-metrics.json

@@ -67,7 +67,7 @@ func TestMultiVariantGeneration(t *testing.T) {
 
 	// Создаём генератор
 	gen := New()
-	gen.debugDir = debugDir
+	gen.SetDebugDir(debugDir)
 
 	// Запускаем тесты для каждого варианта
 	for _, tc := range testCases {

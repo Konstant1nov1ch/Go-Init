@@ -71,18 +71,12 @@ func (a *App) initDeps(ctx context.Context) error {
 	inits := []func(context.Context) error{
 		a.initConfig,
 		a.initLogger,
-		a.initCloser,
-		{{- if .features.hasDatabase}}
+		a.initCloser{{- if .features.hasDatabase}},
 		a.initDB,
-		a.initRepo,
-		{{- end}}
-		a.initServices,
-		{{- if .features.hasGraphQL}}
-		a.initHttpServer,
-		{{- end}}
-		{{- if .features.hasGRPC}}
-		a.initGrpcServer,
-		{{- end}}
+		a.initRepo{{- end}},
+		a.initServices{{- if .features.hasGraphQL}},
+		a.initHttpServer{{- end}}{{- if .features.hasGRPC}},
+		a.initGrpcServer{{- end}},
 	}
 	for _, f := range inits {
 		err := f(ctx)
