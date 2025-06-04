@@ -11,8 +11,8 @@ func TestArchiver_CreateDirectories(t *testing.T) {
 
 	// Test files that would create directories
 	files := map[string][]byte{
-		"pkg/api/grpc/.gitkeep":       []byte("# gRPC directory"),
-		"pkg/api/graphql/.gitkeep":    []byte("# GraphQL directory"),
+		"pkg/api/grpc/README.md":      []byte("# gRPC directory"),
+		"pkg/api/graphql/README.md":   []byte("# GraphQL directory"),
 		"internal/service/service.go": []byte("package service"),
 		"cmd/main.go":                 []byte("package main"),
 	}
@@ -64,8 +64,8 @@ func TestArchiver_CreateDirectories(t *testing.T) {
 
 	// Check that all files are present
 	expectedFiles := []string{
-		"pkg/api/grpc/.gitkeep",
-		"pkg/api/graphql/.gitkeep",
+		"pkg/api/grpc/README.md",
+		"pkg/api/graphql/README.md",
 		"internal/service/service.go",
 		"cmd/main.go",
 	}

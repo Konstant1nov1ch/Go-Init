@@ -167,15 +167,15 @@ var featureFilterRules = map[string]struct {
 	ExcludedFeatures []string
 }{
 	// gRPC-specific files
-	"grpc":                  {RequiredFeatures: []string{"hasGRPC"}, ExcludedFeatures: nil},
-	"proto":                 {RequiredFeatures: []string{"hasGRPC"}, ExcludedFeatures: nil},
-	"pkg/api/grpc/.gitkeep": {RequiredFeatures: []string{"hasGRPC"}, ExcludedFeatures: nil},
+	"grpc":                   {RequiredFeatures: []string{"hasGRPC"}, ExcludedFeatures: nil},
+	"proto":                  {RequiredFeatures: []string{"hasGRPC"}, ExcludedFeatures: nil},
+	"pkg/api/grpc/README.md": {RequiredFeatures: []string{"hasGRPC"}, ExcludedFeatures: nil},
 
 	// GraphQL-specific files
-	"graphql":                  {RequiredFeatures: []string{"hasGraphQL"}, ExcludedFeatures: nil},
-	"gql":                      {RequiredFeatures: []string{"hasGraphQL"}, ExcludedFeatures: nil},
-	"tools/":                   {RequiredFeatures: []string{"hasGraphQL"}, ExcludedFeatures: nil}, // tools directory is GraphQL specific (for gqlgen)
-	"pkg/api/graphql/.gitkeep": {RequiredFeatures: []string{"hasGraphQL"}, ExcludedFeatures: nil},
+	"graphql":                   {RequiredFeatures: []string{"hasGraphQL"}, ExcludedFeatures: nil},
+	"gql":                       {RequiredFeatures: []string{"hasGraphQL"}, ExcludedFeatures: nil},
+	"tools/":                    {RequiredFeatures: []string{"hasGraphQL"}, ExcludedFeatures: nil}, // tools directory is GraphQL specific (for gqlgen)
+	"pkg/api/graphql/README.md": {RequiredFeatures: []string{"hasGraphQL"}, ExcludedFeatures: nil},
 
 	// Database-specific files
 	"repository": {RequiredFeatures: []string{"hasDatabase"}, ExcludedFeatures: nil},
