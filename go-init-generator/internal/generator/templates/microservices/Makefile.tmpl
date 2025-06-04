@@ -1,4 +1,4 @@
-.PHONY: build run clean logs shell help test lint format bin-deps protoc
+.PHONY: build run clean logs shell help test lint format bin-deps protoc init gql
 
 LOCAL_BIN := $(CURDIR)/bin
 
@@ -76,6 +76,8 @@ help:
 	@echo "  make test           - Запустить тесты"
 	@echo "  make lint           - Линтинг (golangci-lint)"
 	@echo "  make format         - Форматирование (go fmt ./...)"
+	@echo "  make gql            - Сгенерировать GraphQL код"
+	@echo "  make init           - Инициализация проекта"
 
 test:
 	go test ./... -v
@@ -88,3 +90,7 @@ format:
 
 gql:
 	cd tools && go run github.com/99designs/gqlgen generate
+
+## Инициализация проекта - генерация всего необходимого кода
+init: gql protoc
+	@echo "Project initialization completed!"

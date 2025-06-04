@@ -1,0 +1,224 @@
+# build.ps1 - Windows PowerShell скрипт для сборки проекта {{ .Name }}
+# Аналог Makefile для Windows пользователей
+
+param(
+    [Parameter(Position=0)]
+    [string]$Command = "help"
+)
+
+# Переменные окружения
+$LOCAL_BIN = Join-Path $PSScriptRoot "bin"
+$PROTO_NAME = "users-posts-demo"
+
+# Загружаем переменные из .env если файл существует
+$envFile = Join-Path $PSScriptRoot ".env"
+if (Test-Path $envFile) {
+    Get-Content $envFile | ForEach-Object {
+        if ($_ -match "^\s*([^#][^=]*)\s*=\s*(.*)\s*$") {
+            [Environment]::SetEnvironmentVariable($matches[1], $matches[2], "Process")
+        }
+    }
+}
+
+# Значения по умолчанию
+$SERVICE_NAME = if ($env:SERVICE_NAME) { $env:SERVICE_NAME } else { "my-service" }
+$DOCKERFILE = if ($env:DOCKERFILE) { $env:DOCKERFILE } else { "build/docker/Dockerfile" }
+$BUILD_CONTEXT = if ($env:BUILD_CONTEXT) { $env:BUILD_CONTEXT } else { "." }
+
+# Получаем версию Go из go.mod
+$GO_VERSION = (Get-Content "go.mod" | Select-String "^go " | ForEach-Object { $_.Line.Split()[1] })
+
+function Show-Help {
+    Write-Host "Available PowerShell commands:" -ForegroundColor Green
+    Write-Host "  .\build.ps1 build          - Собрать Docker-образ" -ForegroundColor White
+    Write-Host "  .\build.ps1 run            - Запустить контейнер" -ForegroundColor White
+    Write-Host "  .\build.ps1 clean          - Очистить Docker-кэш" -ForegroundColor White
+    Write-Host "  .\build.ps1 logs           - Посмотреть логи контейнера" -ForegroundColor White
+    Write-Host "  .\build.ps1 shell          - Открыть shell в контейнере" -ForegroundColor White
+    Write-Host "  .\build.ps1 bin-deps       - Установить протогенераторы" -ForegroundColor White
+    Write-Host "  .\build.ps1 protoc         - Сгенерировать gRPC-код" -ForegroundColor White
+    Write-Host "  .\build.ps1 gql            - Сгенерировать GraphQL код" -ForegroundColor White
+    Write-Host "  .\build.ps1 init           - Инициализация проекта" -ForegroundColor White
+    Write-Host "  .\build.ps1 test           - Запустить тесты" -ForegroundColor White
+    Write-Host "  .\build.ps1 lint           - Линтинг (golangci-lint)" -ForegroundColor White
+    Write-Host "  .\build.ps1 format         - Форматирование (go fmt ./...)" -ForegroundColor White
+    Write-Host "  .\build.ps1 help           - Показать эту справку" -ForegroundColor White
+}
+
+function Install-BinDeps {
+    Write-Host "Installing protobuf plugins..." -ForegroundColor Yellow
+    
+    # Создаем директорию bin если её нет
+    if (!(Test-Path $LOCAL_BIN)) {
+        New-Item -ItemType Directory -Path $LOCAL_BIN -Force | Out-Null
+    }
+    
+    $env:GOBIN = $LOCAL_BIN
+    & go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28.1
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Failed to install protoc-gen-go"
+        exit 1
+    }
+    
+    & go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2.0
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Failed to install protoc-gen-go-grpc"
+        exit 1
+    }
+    
+    Write-Host "Protobuf plugins installed successfully!" -ForegroundColor Green
+}
+
+function Generate-Protoc {
+    Write-Host "Generating protobuf code..." -ForegroundColor Yellow
+    
+    # Сначала устанавливаем зависимости
+    Install-BinDeps
+    
+    Write-Host "Generating protobuf for $PROTO_NAME.proto..." -ForegroundColor Yellow
+    
+    $protocArgs = @(
+        "--experimental_allow_proto3_optional=true",
+        "-I", "api/grpc",
+        "--plugin=protoc-gen-go=$LOCAL_BIN/protoc-gen-go.exe",
+        "--plugin=protoc-gen-go-grpc=$LOCAL_BIN/protoc-gen-go-grpc.exe",
+        "--go_out", "pkg/api/grpc",
+        "--go_opt", "paths=source_relative",
+        "--go-grpc_out", "pkg/api/grpc", 
+        "--go-grpc_opt", "paths=source_relative",
+        "api/grpc/$PROTO_NAME.proto"
+    )
+    
+    & protoc @protocArgs
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Failed to generate protobuf code"
+        exit 1
+    }
+    
+    Write-Host "Running go mod tidy..." -ForegroundColor Yellow
+    & go mod tidy
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Failed to run go mod tidy"
+        exit 1
+    }
+    
+    Write-Host "Protobuf generation completed!" -ForegroundColor Green
+}
+
+function Generate-GraphQL {
+    Write-Host "Generating GraphQL code..." -ForegroundColor Yellow
+    
+    if (!(Test-Path "tools")) {
+        Write-Error "Tools directory not found"
+        exit 1
+    }
+    
+    Set-Location "tools"
+    & go run github.com/99designs/gqlgen generate
+    $exitCode = $LASTEXITCODE
+    Set-Location ".."
+    
+    if ($exitCode -ne 0) {
+        Write-Error "Failed to generate GraphQL code"
+        exit 1
+    }
+    
+    Write-Host "GraphQL generation completed!" -ForegroundColor Green
+}
+
+function Initialize-Project {
+    Write-Host "Initializing project..." -ForegroundColor Yellow
+    
+    # Генерируем GraphQL код
+    Generate-GraphQL
+    
+    # Генерируем Protobuf код
+    Generate-Protoc
+    
+    Write-Host "Project initialization completed!" -ForegroundColor Green
+}
+
+function Build-Docker {
+    Write-Host "Building Docker image for $SERVICE_NAME with Go $GO_VERSION..." -ForegroundColor Yellow
+    & docker build --build-arg GO_VERSION=$GO_VERSION -t $SERVICE_NAME -f $DOCKERFILE $BUILD_CONTEXT
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Failed to build Docker image"
+        exit 1
+    }
+    Write-Host "Docker image built successfully!" -ForegroundColor Green
+}
+
+function Run-Docker {
+    Write-Host "Running $SERVICE_NAME..." -ForegroundColor Yellow
+    & docker run --rm -p 8080:8080 $SERVICE_NAME
+}
+
+function Clean-Docker {
+    Write-Host "Cleaning up Docker cache..." -ForegroundColor Yellow
+    & docker rmi $SERVICE_NAME 2>$null
+    & docker system prune -f
+    Write-Host "Docker cleanup completed!" -ForegroundColor Green
+}
+
+function Show-Logs {
+    Write-Host "Fetching logs from $SERVICE_NAME..." -ForegroundColor Yellow
+    & docker logs -f $SERVICE_NAME
+}
+
+function Open-Shell {
+    Write-Host "Opening shell in $SERVICE_NAME..." -ForegroundColor Yellow
+    & docker run --rm -it $SERVICE_NAME sh
+}
+
+function Run-Tests {
+    Write-Host "Running tests..." -ForegroundColor Yellow
+    & go test ./... -v
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Tests failed"
+        exit 1
+    }
+    Write-Host "All tests passed!" -ForegroundColor Green
+}
+
+function Run-Lint {
+    Write-Host "Running linter..." -ForegroundColor Yellow
+    & golangci-lint run
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Linting failed"
+        exit 1
+    }
+    Write-Host "Linting completed!" -ForegroundColor Green
+}
+
+function Format-Code {
+    Write-Host "Formatting code..." -ForegroundColor Yellow
+    & go fmt ./...
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Code formatting failed"
+        exit 1
+    }
+    Write-Host "Code formatting completed!" -ForegroundColor Green
+}
+
+# Основная логика выполнения команд
+switch ($Command.ToLower()) {
+    "help"     { Show-Help }
+    "build"    { Build-Docker }
+    "run"      { Run-Docker }
+    "clean"    { Clean-Docker }
+    "logs"     { Show-Logs }
+    "shell"    { Open-Shell }
+    "bin-deps" { Install-BinDeps }
+    "protoc"   { Generate-Protoc }
+    "gql"      { Generate-GraphQL }
+    "init"     { Initialize-Project }
+    "test"     { Run-Tests }
+    "lint"     { Run-Lint }
+    "format"   { Format-Code }
+    default {
+        Write-Host "Unknown command: $Command" -ForegroundColor Red
+        Write-Host ""
+        Show-Help
+        exit 1
+    }
+} 

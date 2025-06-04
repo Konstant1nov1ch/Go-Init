@@ -1,4 +1,4 @@
-.PHONY: build run clean logs shell help test lint format bin-deps protoc
+.PHONY: build run clean logs shell help test lint format bin-deps protoc init
 
 LOCAL_BIN := $(CURDIR)/bin
 
@@ -70,6 +70,7 @@ help:
 	@echo "  make shell          - Открыть shell в контейнере"
 	@echo "  make bin-deps       - Установить протогенераторы (protoc-gen-go, protoc-gen-go-grpc)"
 	@echo "  make protoc         - Сгенерировать gRPC-код (archive_publisher.proto -> pkg/api/grpc)"
+	@echo "  make init           - Инициализация проекта"
 	@echo "  make test           - Запустить тесты"
 	@echo "  make lint           - Линтинг (golangci-lint)"
 	@echo "  make format         - Форматирование (go fmt ./...)"
@@ -82,3 +83,7 @@ lint:
 
 format:
 	go fmt ./...
+
+## Инициализация проекта - генерация всего необходимого кода  
+init: protoc
+	@echo "Project initialization completed!"
