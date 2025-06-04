@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // Archiver handles creation of ZIP archives from generated files
@@ -26,6 +27,19 @@ func NewArchiver(debugArchives bool, debugDir string) *Archiver {
 func (a *Archiver) CreateArchive(files map[string][]byte, id string) ([]byte, error) {
 	var buf bytes.Buffer
 	zipWriter := zip.NewWriter(&buf)
+
+	// Collect all directories that need to be created
+	directories := a.collectDirectories(files)
+
+	// Create directories in the archive first
+	for dir := range directories {
+		// Add trailing slash to indicate directory
+		dirPath := dir + "/"
+		_, err := zipWriter.Create(dirPath)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create directory in archive: %w", err)
+		}
+	}
 
 	// Add files to the archive
 	for path, content := range files {
@@ -48,6 +62,31 @@ func (a *Archiver) CreateArchive(files map[string][]byte, id string) ([]byte, er
 	a.saveDebugArchive(buf.Bytes(), id)
 
 	return buf.Bytes(), nil
+}
+
+// collectDirectories extracts all unique directory paths from file paths
+func (a *Archiver) collectDirectories(files map[string][]byte) map[string]bool {
+	directories := make(map[string]bool)
+
+	for filePath := range files {
+		// Normalize path separators to forward slashes for ZIP archives
+		normalizedPath := strings.ReplaceAll(filePath, "\\", "/")
+		dir := filepath.Dir(normalizedPath)
+
+		// Convert back to forward slashes in case filepath.Dir changed them
+		dir = strings.ReplaceAll(dir, "\\", "/")
+
+		// Add all parent directories
+		for dir != "." && dir != "/" && dir != "" {
+			directories[dir] = true
+			parentDir := filepath.Dir(dir)
+			// Ensure parent dir also uses forward slashes
+			parentDir = strings.ReplaceAll(parentDir, "\\", "/")
+			dir = parentDir
+		}
+	}
+
+	return directories
 }
 
 // saveDebugArchive saves the archive locally if debug mode is enabled
