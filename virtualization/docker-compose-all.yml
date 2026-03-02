@@ -1,7 +1,7 @@
 services:
 # ────────────────────────── MINIO + NGINX ─────────────────────────────────── #
   go_init_minio:
-    image: minio/minio:latest
+    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
     container_name: go_init_minio
     hostname: minio.local
     command: server --console-address ":9001" /data
@@ -22,7 +22,7 @@ services:
     networks: [go-init-networks]
 
   nginx_proxy:
-    image: nginx:latest
+    image: nginx:1.26.3
     container_name: go_init_nginx
     ports: ["9005:80"]
     volumes: ["./minio-proxy.conf:/etc/nginx/nginx.conf"]
@@ -31,7 +31,7 @@ services:
     networks: [go-init-networks]
 
   minio-init:
-    image: minio/mc
+    image: minio/mc:RELEASE.2025-08-13T08-35-41Z
     container_name: minio_init
     depends_on:
       go_init_minio: { condition: service_healthy }
@@ -46,7 +46,7 @@ services:
 
 # ───────────────────────────── POSTGRES + PgBouncer ───────────────────────── #
   go_init_postgres:
-    image: postgres:15
+    image: postgres:17.7
     container_name: go_init_postgres
     environment:
       POSTGRES_DB:       go_init_manager_db
@@ -75,7 +75,7 @@ services:
     networks: [go-init-networks]
 
   go_init_pgbouncer:
-    image: edoburu/pgbouncer:latest
+    image: edoburu/pgbouncer:v1.25.1-p0
     container_name: go_init_pgbouncer
     depends_on: [go_init_postgres]
     environment:
@@ -112,7 +112,7 @@ services:
     networks: [go-init-networks]
 
   go_init_pgadmin:
-    image: elestio/pgadmin
+    image: dpage/pgadmin4:9.12.0
     container_name: go_init_pgadmin
     depends_on: [go_init_postgres]
     environment:
@@ -165,7 +165,7 @@ services:
     networks: [go-init-networks]
 
   go_init_kafka_ui:
-    image: provectuslabs/kafka-ui
+    image: provectuslabs/kafka-ui:v0.7.2
     container_name: go_init_kafka_ui
     ports: ["8082:8080"]
     depends_on: [go_init_kafka]
