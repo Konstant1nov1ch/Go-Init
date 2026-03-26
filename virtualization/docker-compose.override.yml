@@ -20,7 +20,7 @@ services:
       GF_AUTH_ANONYMOUS_ENABLED: "true"
       GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
     volumes:
-      - ./observability/grafana/data:/var/lib/grafana
+      - go_init_grafana_data:/var/lib/grafana
       - ./observability/grafana/provisioning:/etc/grafana/provisioning
     networks: ["go-init-networks"]
 
@@ -29,6 +29,30 @@ services:
     container_name: go_init_nodeexporter
     profiles: ["observe"]
     ports: ["9100:9100"]
+    networks: ["go-init-networks"]
+
+  # ---------- LOGS STACK ----------
+  loki:
+    image: grafana/loki:3.4.2
+    container_name: go_init_loki
+    profiles: ["observe"]
+    ports: ["3100:3100"]
+    command: -config.file=/etc/loki/loki-config.yaml
+    volumes:
+      - ./observability/loki/loki-config.yaml:/etc/loki/loki-config.yaml
+      - go_init_loki_data:/loki
+    networks: ["go-init-networks"]
+
+  promtail:
+    image: grafana/promtail:3.4.2
+    container_name: go_init_promtail
+    profiles: ["observe"]
+    command: -config.file=/etc/promtail/promtail-config.yaml
+    volumes:
+      - ./observability/promtail/promtail-config.yaml:/etc/promtail/promtail-config.yaml
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - loki
     networks: ["go-init-networks"]
 
   # ---------- LOAD GENERATOR ----------
@@ -47,3 +71,7 @@ services:
     depends_on:
       - go_init_manager
     networks: ["go-init-networks"]
+
+volumes:
+  go_init_grafana_data:
+  go_init_loki_data:

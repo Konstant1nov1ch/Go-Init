@@ -13,7 +13,7 @@
       "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
       "targets": [
         {
-          "datasource": "Prometheus",
+          "datasource": { "type": "prometheus", "uid": "go-init-prometheus" },
           "expr": "sum(rate(go_init_manager_http_requests_total[1m])) by (method, path, status)",
           "legendFormat": "{{method}} {{path}} {{status}}"
         }
@@ -32,17 +32,17 @@
       "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
       "targets": [
         {
-          "datasource": "Prometheus",
+          "datasource": { "type": "prometheus", "uid": "go-init-prometheus" },
           "expr": "histogram_quantile(0.50, sum(rate(go_init_manager_http_request_duration_seconds_bucket[1m])) by (le, path))",
           "legendFormat": "p50 {{path}}"
         },
         {
-          "datasource": "Prometheus",
+          "datasource": { "type": "prometheus", "uid": "go-init-prometheus" },
           "expr": "histogram_quantile(0.95, sum(rate(go_init_manager_http_request_duration_seconds_bucket[1m])) by (le, path))",
           "legendFormat": "p95 {{path}}"
         },
         {
-          "datasource": "Prometheus",
+          "datasource": { "type": "prometheus", "uid": "go-init-prometheus" },
           "expr": "histogram_quantile(0.99, sum(rate(go_init_manager_http_request_duration_seconds_bucket[1m])) by (le, path))",
           "legendFormat": "p99 {{path}}"
         }
@@ -61,7 +61,7 @@
       "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
       "targets": [
         {
-          "datasource": "Prometheus",
+          "datasource": { "type": "prometheus", "uid": "go-init-prometheus" },
           "expr": "sum(rate(go_init_manager_http_requests_total{status=~\"5..\"}[1m])) / sum(rate(go_init_manager_http_requests_total[1m])) * 100",
           "legendFormat": "5xx error %"
         }
@@ -80,7 +80,7 @@
       "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
       "targets": [
         {
-          "datasource": "Prometheus",
+          "datasource": { "type": "prometheus", "uid": "go-init-prometheus" },
           "expr": "sum(rate(go_init_manager_kafka_messages_produced_total[1m])) by (topic)",
           "legendFormat": "produced: {{topic}}"
         }
@@ -99,7 +99,7 @@
       "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 },
       "targets": [
         {
-          "datasource": "Prometheus",
+          "datasource": { "type": "prometheus", "uid": "go-init-prometheus" },
           "expr": "sum(rate(go_init_manager_kafka_messages_consumed_total[1m])) by (topic, status)",
           "legendFormat": "{{status}}: {{topic}}"
         }
@@ -118,7 +118,7 @@
       "gridPos": { "x": 12, "y": 16, "w": 12, "h": 8 },
       "targets": [
         {
-          "datasource": "Prometheus",
+          "datasource": { "type": "prometheus", "uid": "go-init-prometheus" },
           "expr": "go_goroutines{job=\"go_init_manager\"}",
           "legendFormat": "goroutines"
         }
@@ -137,12 +137,12 @@
       "gridPos": { "x": 0, "y": 24, "w": 12, "h": 8 },
       "targets": [
         {
-          "datasource": "Prometheus",
+          "datasource": { "type": "prometheus", "uid": "go-init-prometheus" },
           "expr": "go_memstats_heap_inuse_bytes{job=\"go_init_manager\"}",
           "legendFormat": "heap in-use"
         },
         {
-          "datasource": "Prometheus",
+          "datasource": { "type": "prometheus", "uid": "go-init-prometheus" },
           "expr": "go_memstats_heap_alloc_bytes{job=\"go_init_manager\"}",
           "legendFormat": "heap alloc"
         }
@@ -161,7 +161,7 @@
       "gridPos": { "x": 12, "y": 24, "w": 12, "h": 8 },
       "targets": [
         {
-          "datasource": "Prometheus",
+          "datasource": { "type": "prometheus", "uid": "go-init-prometheus" },
           "expr": "histogram_quantile(0.99, rate(go_gc_duration_seconds_bucket{job=\"go_init_manager\"}[5m]))",
           "legendFormat": "p99 GC pause"
         }
@@ -180,7 +180,7 @@
       "gridPos": { "x": 0, "y": 32, "w": 6, "h": 4 },
       "targets": [
         {
-          "datasource": "Prometheus",
+          "datasource": { "type": "prometheus", "uid": "go-init-prometheus" },
           "expr": "sum(go_init_manager_http_requests_total)",
           "legendFormat": "total"
         }
@@ -196,7 +196,7 @@
       "gridPos": { "x": 6, "y": 32, "w": 6, "h": 4 },
       "targets": [
         {
-          "datasource": "Prometheus",
+          "datasource": { "type": "prometheus", "uid": "go-init-prometheus" },
           "expr": "sum(go_init_manager_kafka_messages_produced_total)",
           "legendFormat": "total"
         }
@@ -212,7 +212,7 @@
       "gridPos": { "x": 12, "y": 32, "w": 6, "h": 4 },
       "targets": [
         {
-          "datasource": "Prometheus",
+          "datasource": { "type": "prometheus", "uid": "go-init-prometheus" },
           "expr": "sum(go_init_manager_kafka_messages_consumed_total)",
           "legendFormat": "total"
         }
@@ -228,7 +228,7 @@
       "gridPos": { "x": 18, "y": 32, "w": 6, "h": 4 },
       "targets": [
         {
-          "datasource": "Prometheus",
+          "datasource": { "type": "prometheus", "uid": "go-init-prometheus" },
           "expr": "go_threads{job=\"go_init_manager\"}",
           "legendFormat": "threads"
         }

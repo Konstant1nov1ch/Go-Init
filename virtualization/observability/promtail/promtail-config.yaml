@@ -1,0 +1,50 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://go_init_loki:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: docker
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 5s
+        filters:
+          - name: name
+            values: [go_init_manager]
+
+    relabel_configs:
+      # Убираем ведущий слэш из имени контейнера (/virtualization-go_init_manager-1 → virtualization-go_init_manager-1)
+      - source_labels: [__meta_docker_container_name]
+        regex: /(.*)
+        target_label: container
+
+      - source_labels: [__meta_docker_container_log_stream]
+        target_label: stream
+
+      - source_labels: [__meta_docker_container_label_com_docker_compose_service]
+        target_label: service
+
+    pipeline_stages:
+      # Парсим JSON-логи от zap-логгера
+      - json:
+          expressions:
+            level:   level
+            msg:     msg
+            ts:      ts
+            caller:  caller
+            service: service
+
+      - labels:
+          level:
+          service:
+
+      - timestamp:
+          source: ts
+          format: UnixFloat
+          fallback_formats:
+            - RFC3339Nano
