@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"go-init/internal/eventdata"
+	"go-init/internal/metrics"
 
 	"github.com/google/uuid"
 	common "gitlab.com/go-init/go-init-common/default/kafka"
@@ -37,6 +38,7 @@ func (s *Service) ProduceEvent(ctx context.Context, data *eventdata.ProcessTempl
 		logger.String("topic", eventdata.ProcessingTopicID))
 
 	s.KafkaProducer.Produce(ctx, &event)
+	metrics.KafkaMessagesProducedTotal.WithLabelValues(eventdata.ProcessingTopicID).Inc()
 
 	return nil
 }

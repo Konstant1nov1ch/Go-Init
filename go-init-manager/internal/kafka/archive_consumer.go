@@ -9,6 +9,7 @@ import (
 	dbRepo "go-init/internal/database"
 	"go-init/internal/eventdata"
 	"go-init/internal/graphql"
+	"go-init/internal/metrics"
 
 	"github.com/google/uuid"
 	"gitlab.com/go-init/go-init-common/default/logger"
@@ -36,6 +37,7 @@ func (s *ArchiveConsumerService) Work(ctx context.Context, value []byte) error {
 	// Парсим CloudEvent
 	var cloudEvent eventdata.CloudEvent
 	if err := json.Unmarshal(value, &cloudEvent); err != nil {
+		metrics.KafkaMessagesConsumedTotal.WithLabelValues(eventdata.DoneTopicID, "error").Inc()
 		s.log.ErrorContext(ctx, "Ошибка парсинга CloudEvent",
 			logger.Error(err),
 			logger.String("raw_message", string(value)))
@@ -101,6 +103,7 @@ func (s *ArchiveConsumerService) Work(ctx context.Context, value []byte) error {
 			logger.String("template_uuid", requestUUID.String()))
 		return err
 	}
+	metrics.KafkaMessagesConsumedTotal.WithLabelValues(eventdata.DoneTopicID, "success").Inc()
 	s.log.InfoContext(ctx, "Статус шаблона обновлен на COMPLETED",
 		logger.String("template_uuid", requestUUID.String()))
 

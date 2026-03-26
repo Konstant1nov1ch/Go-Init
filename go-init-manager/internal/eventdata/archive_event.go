@@ -10,6 +10,9 @@ const (
 
 	// ArchiveSchema схема для событий архива
 	ArchiveSchema = "go-init-archive-schema"
+
+	// DoneTopicID ID топика для получения событий готовности архива
+	DoneTopicID = "go-init-done"
 )
 
 // CloudEvent представляет структуру сообщения CloudEvent

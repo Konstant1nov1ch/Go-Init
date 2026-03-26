@@ -14,15 +14,14 @@ services:
     container_name: go_init_grafana
     profiles: ["observe"]
     ports: ["3000:3000"]
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
     volumes:
-      - ./observability/grafana:/var/lib/grafana
-    networks: ["go-init-networks"]
-
-  cadvisor:
-    image: gcr.io/cadvisor/cadvisor:v0.56.2
-    container_name: go_init_cadvisor
-    profiles: ["observe"]
-    ports: ["8080:8080"]
+      - ./observability/grafana/data:/var/lib/grafana
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning
     networks: ["go-init-networks"]
 
   nodeexporter:

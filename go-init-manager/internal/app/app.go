@@ -11,8 +11,10 @@ import (
 	"go-init/internal/database/request_repo/models"
 	"go-init/internal/graphql"
 	"go-init/internal/kafka"
+	"go-init/internal/metrics"
 	generatedGQL "go-init/pkg/api/graphql"
 
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	database "gitlab.com/go-init/go-init-common/default/db/pg/orm"
 	commonKafka "gitlab.com/go-init/go-init-common/default/kafka"
 
@@ -108,11 +110,10 @@ func (a *App) initHttpServer(ctx context.Context) error {
 	)
 
 	// 2. Создаём кастомный GraphQL-хендлер через пакет mygraphql
-	gqlHandler := myserver.NewGraphQLServer(schema)
+	gqlHandler := metrics.HTTPMiddleware("/graphql", myserver.NewGraphQLServer(schema))
 
-	// 3. Подготовим ( handler для метрик.
-	//    Когда захотите Prometheus / OTEL - тут подключаете
-	metricsHandler := http.NotFoundHandler()
+	// 3. Prometheus metrics handler at /metrics
+	metricsHandler := promhttp.Handler()
 
 	// 4. Собираем middleware (логирование, CORS и т.д.) через пакет myhttp
 	middlewares := myhttp.CollectHandlers(

@@ -8,6 +8,7 @@ require (
 	github.com/99designs/gqlgen v0.17.68
 	github.com/google/uuid v1.6.0
 	github.com/mcuadros/go-defaults v1.2.0
+	github.com/prometheus/client_golang v1.22.0
 	github.com/vektah/gqlparser/v2 v2.5.23
 	gitlab.com/go-init/go-init-common v1.0.10
 	google.golang.org/grpc v1.71.0
