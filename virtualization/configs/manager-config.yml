@@ -19,11 +19,16 @@ postgres_db:
   database_name: go_init_manager_db
   user:     go_init_usr
   password: 1234
-  ssl:      disable         
+  ssl:      disable
   schema:   public
   timezone: "Europe/Moscow"
   auto_migrate: true
+  init_timeout: 90s        # старт Postgres/PgBouncer в Docker часто > 5s (старое значение в ORM)
 
+
+tracing:
+  enabled: true
+  otlp_endpoint: "http://go_init_tempo:4318"
 
 kafka:
   enabled: true

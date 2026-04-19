@@ -18,7 +18,8 @@ services:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: admin
       GF_AUTH_ANONYMOUS_ENABLED: "true"
-      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      # Viewer скрывает Explore / Tempo в меню; для локальной отладки трасс — Editor
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Editor
     volumes:
       - go_init_grafana_data:/var/lib/grafana
       - ./observability/grafana/provisioning:/etc/grafana/provisioning
@@ -55,6 +56,21 @@ services:
       - loki
     networks: ["go-init-networks"]
 
+  # ---------- TRACES (OpenTelemetry OTLP → Tempo) ----------
+  tempo:
+    image: grafana/tempo:2.6.1
+    container_name: go_init_tempo
+    profiles: ["observe"]
+    command: ["-config.file=/etc/tempo.yaml"]
+    ports:
+      - "3200:3200"
+      - "4317:4317"
+      - "4318:4318"
+    volumes:
+      - ./observability/tempo/tempo.yaml:/etc/tempo.yaml
+      - go_init_tempo_data:/var/tempo
+    networks: ["go-init-networks"]
+
   # ---------- LOAD GENERATOR ----------
 # ───────── LOAD-GENERATOR ──────────────────────────────────────────────
   k6:
@@ -75,3 +91,4 @@ services:
 volumes:
   go_init_grafana_data:
   go_init_loki_data:
+  go_init_tempo_data:

@@ -4,6 +4,8 @@ go 1.23.2
 
 toolchain go1.23.8
 
+replace gitlab.com/go-init/go-init-common => ../go-init-common
+
 require (
 	github.com/99designs/gqlgen v0.17.68
 	github.com/google/uuid v1.6.0
@@ -11,6 +13,10 @@ require (
 	github.com/prometheus/client_golang v1.22.0
 	github.com/vektah/gqlparser/v2 v2.5.23
 	gitlab.com/go-init/go-init-common v1.0.10
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.60.0
+	go.opentelemetry.io/otel v1.35.0
+	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.35.0
+	go.opentelemetry.io/otel/sdk v1.35.0
 	google.golang.org/grpc v1.71.0
 	google.golang.org/protobuf v1.36.5
 	gorm.io/gorm v1.25.12
@@ -45,8 +51,10 @@ require (
 	github.com/twmb/franz-go/pkg/kmsg v1.9.0 // indirect
 	github.com/urfave/cli/v2 v2.27.6 // indirect
 	github.com/xrash/smetrics v0.0.0-20240521201337-686a1a2994c1 // indirect
-	go.opentelemetry.io/otel v1.35.0 // indirect
+	go.opentelemetry.io/auto/sdk v1.1.0 // indirect
+	go.opentelemetry.io/otel/metric v1.35.0 // indirect
 	go.opentelemetry.io/otel/trace v1.35.0 // indirect
+	go.opentelemetry.io/proto/otlp v1.5.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/crypto v0.36.0 // indirect

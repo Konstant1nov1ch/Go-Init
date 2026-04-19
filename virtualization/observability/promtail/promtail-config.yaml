@@ -33,11 +33,13 @@ scrape_configs:
       # Парсим JSON-логи от zap-логгера
       - json:
           expressions:
-            level:   level
-            msg:     msg
-            ts:      ts
-            caller:  caller
-            service: service
+            level:    level
+            msg:      msg
+            ts:       ts
+            caller:   caller
+            service:  service
+            trace_id: trace_id
+            span_id:  span_id
 
       - labels:
           level:

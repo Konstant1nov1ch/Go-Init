@@ -178,7 +178,9 @@ services:
 
 # ─────────────────────────────── MICROSERVICES ────────────────────────────── #
   go_init_manager:
-    build: { context: ../go-init-manager, dockerfile: build/docker/Dockerfile }
+    build:
+      context: ..
+      dockerfile: go-init-manager/build/docker/Dockerfile
     depends_on: [go_init_pgbouncer, go_init_kafka]
     environment:
       GOMAXPROCS: "8"                  # Увеличиваем для параллелизации
