@@ -47,7 +47,7 @@ func FromInputToDbServiceTemplate(
 	// Conditionally add optional fields if they are provided
 
 	// Add endpoints if provided (optional in schema)
-	if input.Endpoints != nil && len(input.Endpoints) > 0 {
+	if len(input.Endpoints) > 0 {
 		template.Endpoints = convertEndpoints(input.Endpoints)
 	}
 

@@ -17,4 +17,4 @@ func Uint64(key string, val uint64) slog.Attr          { return slog.Uint64(key,
 func Float64(key string, val float64) slog.Attr        { return slog.Float64(key, val) }
 func Time(key string, val time.Time) slog.Attr         { return slog.Time(key, val) }
 func Duration(key string, val time.Duration) slog.Attr { return slog.Duration(key, val) }
-func Error(err error) slog.Attr                        { return slog.String("error-message", err.Error()) }
+func Error(err error) slog.Attr                        { return slog.String(errMsg, err.Error()) }

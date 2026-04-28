@@ -60,7 +60,13 @@ func (s *Service) CreateTemplate(ctx context.Context, input model.CreateTemplate
 
 	// Публикуем событие, используя UUID шаблона
 	ev := converter.FromInputToEvent(input, templateUUID)
-	s.ProduceEvent(ctx, &ev)
+	if err := s.ProduceEvent(ctx, &ev); err != nil {
+		tracing.EndError(opSpan, err)
+		return &model.TemplateResponse{
+			Success: false,
+			Message: strPtr("Failed to publish event: " + err.Error()),
+		}, nil
+	}
 
 	graphqlTemplate := converter.DbTemplateToGraphqlTemplate(template)
 	if graphqlTemplate == nil {

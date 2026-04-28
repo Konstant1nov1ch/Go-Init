@@ -3,7 +3,9 @@ package entity
 import (
 	"go/ast"
 	"go/token"
-	"strings"
+
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 
 	"go-init-gen/internal/eventdata"
 	"go-init-gen/internal/generator/engine/generators"
@@ -29,7 +31,7 @@ func (g *Generator) Generate(file *ast.File, data *eventdata.TemplateEventData) 
 	}
 
 	// Create entity struct based on service name
-	entityName := strings.Title(data.Name)
+	entityName := cases.Title(language.English).String(data.Name)
 	entityStruct := &ast.GenDecl{
 		Tok: token.TYPE,
 		Specs: []ast.Spec{

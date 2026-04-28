@@ -5,6 +5,9 @@ import (
 	"strings"
 	"text/template"
 
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
+
 	"go-init-gen/internal/eventdata"
 	"go-init-gen/internal/generator/engine/generators/features"
 )
@@ -33,7 +36,7 @@ func NewRenderer(basePath string) Renderer {
 	// Add default template functions
 	r.funcMap["ToLower"] = strings.ToLower
 	r.funcMap["ToUpper"] = strings.ToUpper
-	r.funcMap["Title"] = strings.Title
+	r.funcMap["Title"] = cases.Title(language.English).String
 	r.funcMap["ToCamelCase"] = ToCamelCase
 	r.funcMap["ToSnakeCase"] = ToSnakeCase
 	r.funcMap["ToKebabCase"] = ToKebabCase

@@ -14,8 +14,6 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
-const statusDone = "Done"
-
 func (s *Service) GetTemplate(ctx context.Context, id string) (*model.TemplateResponse, error) {
 	s.logger.Info("Getting template by ID: " + id)
 

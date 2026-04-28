@@ -1,0 +1,4 @@
+# golangci-lint: каталог с gqlgen.yml и tool-importами (не прод-код).
+issues:
+  exclude-dirs:
+    - tools

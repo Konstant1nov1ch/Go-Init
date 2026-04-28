@@ -9,7 +9,7 @@ apply-rules.sh
 .vscode/
 .cursor/
 go.work*
-
+.cache/
 .DS_Store
 __debug_*
 template_*

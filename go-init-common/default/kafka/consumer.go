@@ -3,7 +3,6 @@ package kafka
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"golang.org/x/sync/errgroup"
 
@@ -20,8 +19,6 @@ type ConsumerWorkers map[string][]ConsumerWorker
 type ConsumerWorker interface {
 	Work(ctx context.Context, value []byte) error
 }
-
-const timeOut = 10 * time.Second
 
 func (c *ClientConfig) Start(ctx context.Context) {
 	if !c.consumerConfig.enabled {

@@ -85,10 +85,14 @@ func newDBConnection(conf *pg.Config) Init {
 			SingularTable: true,
 		},
 	})
-	var sqlDB *sql.DB
-	if err == nil {
-		sqlDB, err = db.DB()
-	} else {
+	if err != nil {
+		return Init{
+			Conn:  nil,
+			Error: err,
+		}
+	}
+	sqlDB, err := db.DB()
+	if err != nil {
 		return Init{
 			Conn:  nil,
 			Error: err,

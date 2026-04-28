@@ -1,0 +1,73 @@
+# GitHub Actions: аналог .gitlab-ci.yml (build / lint / test).
+# Для GitLab см. .gitlab-ci.yml и CI_CD.md в корне репозитория
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      GOPATH: ${{ github.workspace }}/.go
+      GOCACHE: ${{ github.workspace }}/.cache/go-build
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+          cache-dependency-path: |
+            go-init-common/go.sum
+            go-init-manager/go.sum
+            go-init-generator/go.sum
+            go-init-publisher/go.sum
+      - name: Build all modules
+        run: |
+          set -e
+          mkdir -p "$GOPATH" "$GOCACHE"
+          cd go-init-common && go build ./...
+          cd "$GITHUB_WORKSPACE/go-init-manager" && go build -o /dev/null ./cmd
+          cd "$GITHUB_WORKSPACE/go-init-generator" && go build ./...
+          cd "$GITHUB_WORKSPACE/go-init-publisher" && go build ./...
+
+  lint:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        module: [go-init-common, go-init-manager, go-init-generator, go-init-publisher]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+          cache-dependency-path: ${{ matrix.module }}/go.sum
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.64.8
+          working-directory: ${{ matrix.module }}
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        module: [go-init-common, go-init-manager, go-init-generator, go-init-publisher]
+    env:
+      GOPATH: ${{ github.workspace }}/.go
+      GOCACHE: ${{ github.workspace }}/.cache/go-build
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+          cache-dependency-path: ${{ matrix.module }}/go.sum
+      - name: go test
+        run: |
+          mkdir -p "$GOPATH" "$GOCACHE"
+          cd "${{ matrix.module }}" && go test ./... -count=1 -short

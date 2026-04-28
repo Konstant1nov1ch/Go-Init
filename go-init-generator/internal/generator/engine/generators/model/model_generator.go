@@ -3,7 +3,9 @@ package model
 import (
 	"go/ast"
 	"go/token"
-	"strings"
+
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 
 	"go-init-gen/internal/eventdata"
 	"go-init-gen/internal/generator/engine/generators"
@@ -55,7 +57,7 @@ func (g *Generator) Generate(file *ast.File, data *eventdata.TemplateEventData) 
 	file.Decls = append(file.Decls, baseModel)
 
 	// Create specific model types based on the service name
-	modelName := strings.Title(data.Name) + "Model"
+	modelName := cases.Title(language.English).String(data.Name) + "Model"
 	modelStruct := &ast.GenDecl{
 		Tok: token.TYPE,
 		Specs: []ast.Spec{
