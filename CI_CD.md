@@ -101,7 +101,6 @@ docker compose -f docker-compose-all.yml build go_init_manager
 
 Файл `.github/workflows/ci.yml`: при push/PR в **`main`** запускаются jobs **build**, **lint** (matrix по модулям), **test** (matrix). Просмотр: вкладка **Actions** в репозитории.
 
-Если репозиторий только на GitLab, каталог `.github` можно не использовать.
 
 ---
 
@@ -120,17 +119,5 @@ Go-Init/
 
 ---
 
-## Остановка / отключение
 
-CI не создаёт долгоживущих сервисов. Чтобы **не запускать** пайплайны на MR в main — измените `workflow.rules` в `.gitlab-ci.yml` или отключите CI в **Settings → General → Visibility** (крайний случай).
-
----
-
-## Полезные ссылки
-
-| Тема | Ссылка |
-|------|--------|
-| GitLab CI YAML | https://docs.gitlab.com/ee/ci/yaml/ |
-| Workflow rules | https://docs.gitlab.com/ee/ci/yaml/workflow.html |
-| GitHub Actions | https://docs.github.com/en/actions |
-| golangci-lint | https://golangci-lint.run/ |
+![ci/cd actions](cicd.png)
