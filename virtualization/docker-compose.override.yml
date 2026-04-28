@@ -1,7 +1,7 @@
 services:
   # ---------- METRICS STACK ----------
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v3.10.0
     container_name: go_init_prometheus
     profiles: ["observe"]
     ports: ["9090:9090"]
@@ -10,33 +10,72 @@ services:
     networks: ["go-init-networks"]
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:12.4.0
     container_name: go_init_grafana
     profiles: ["observe"]
     ports: ["3000:3000"]
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      # Viewer скрывает Explore / Tempo в меню; для локальной отладки трасс — Editor
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Editor
     volumes:
-      - ./observability/grafana:/var/lib/grafana
-    networks: ["go-init-networks"]
-
-  cadvisor:
-    image: gcr.io/cadvisor/cadvisor:latest
-    container_name: go_init_cadvisor
-    profiles: ["observe"]
-    ports: ["8080:8080"]
+      - go_init_grafana_data:/var/lib/grafana
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning
     networks: ["go-init-networks"]
 
   nodeexporter:
-    image: prom/node-exporter:latest
+    image: prom/node-exporter:v1.10.2
     container_name: go_init_nodeexporter
     profiles: ["observe"]
     ports: ["9100:9100"]
+    networks: ["go-init-networks"]
+
+  # ---------- LOGS STACK ----------
+  loki:
+    image: grafana/loki:3.4.2
+    container_name: go_init_loki
+    profiles: ["observe"]
+    ports: ["3100:3100"]
+    command: -config.file=/etc/loki/loki-config.yaml
+    volumes:
+      - ./observability/loki/loki-config.yaml:/etc/loki/loki-config.yaml
+      - go_init_loki_data:/loki
+    networks: ["go-init-networks"]
+
+  promtail:
+    image: grafana/promtail:3.4.2
+    container_name: go_init_promtail
+    profiles: ["observe"]
+    command: -config.file=/etc/promtail/promtail-config.yaml
+    volumes:
+      - ./observability/promtail/promtail-config.yaml:/etc/promtail/promtail-config.yaml
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - loki
+    networks: ["go-init-networks"]
+
+  # ---------- TRACES (OpenTelemetry OTLP → Tempo) ----------
+  tempo:
+    image: grafana/tempo:2.6.1
+    container_name: go_init_tempo
+    profiles: ["observe"]
+    command: ["-config.file=/etc/tempo.yaml"]
+    ports:
+      - "3200:3200"
+      - "4317:4317"
+      - "4318:4318"
+    volumes:
+      - ./observability/tempo/tempo.yaml:/etc/tempo.yaml
+      - go_init_tempo_data:/var/tempo
     networks: ["go-init-networks"]
 
   # ---------- LOAD GENERATOR ----------
 # ───────── LOAD-GENERATOR ──────────────────────────────────────────────
   k6:
     profiles: ["load"]
-    image: grafana/k6:latest
+    image: grafana/k6:1.6.1
     volumes:
       - ./k6:/scripts               # там лежит full_flow.js
     environment:
@@ -48,3 +87,8 @@ services:
     depends_on:
       - go_init_manager
     networks: ["go-init-networks"]
+
+volumes:
+  go_init_grafana_data:
+  go_init_loki_data:
+  go_init_tempo_data:

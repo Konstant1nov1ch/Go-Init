@@ -11,8 +11,11 @@ import (
 	"go-init/internal/database/request_repo/models"
 	"go-init/internal/graphql"
 	"go-init/internal/kafka"
+	"go-init/internal/metrics"
+	"go-init/internal/tracing"
 	generatedGQL "go-init/pkg/api/graphql"
 
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	database "gitlab.com/go-init/go-init-common/default/db/pg/orm"
 	commonKafka "gitlab.com/go-init/go-init-common/default/kafka"
 
@@ -57,6 +60,7 @@ func (a *App) initDeps(ctx context.Context) error {
 		a.initConfig,
 		a.initLogger,
 		a.initCloser,
+		a.initTracing,
 		a.initDb,
 		a.initKafka,
 		a.initGrpcServer,
@@ -96,6 +100,19 @@ func (a *App) initCloser(_ context.Context) error {
 	return nil
 }
 
+func (a *App) initTracing(ctx context.Context) error {
+	shutdown, err := tracing.Init(ctx, a.log, a.cfg.Tracing, serviceName, a.cfg.HttpServ.Version)
+	if err != nil {
+		return err
+	}
+	closer.Add(func() error {
+		cancelCtx, cancel := context.WithTimeout(context.Background(), shutDownTimeOut)
+		defer cancel()
+		return shutdown(cancelCtx)
+	})
+	return nil
+}
+
 func (a *App) initHttpServer(ctx context.Context) error {
 	// 1. Собираем ExecutableSchema из вашего проекта,
 	//    предполагая, что у вас есть graph.NewExecutableSchema() и свой Resolver
@@ -107,12 +124,13 @@ func (a *App) initHttpServer(ctx context.Context) error {
 		},
 	)
 
-	// 2. Создаём кастомный GraphQL-хендлер через пакет mygraphql
-	gqlHandler := myserver.NewGraphQLServer(schema)
+	// 2. Создаём GraphQL-хендлер: метрики → HTTP server span (OTEL) → resolver
+	gqlInner := myserver.NewGraphQLServer(schema)
+	gqlHandler := metrics.HTTPMiddleware("/graphql", gqlInner)
+	gqlHandler = tracing.HTTPHandler("/graphql", gqlHandler)
 
-	// 3. Подготовим ( handler для метрик.
-	//    Когда захотите Prometheus / OTEL - тут подключаете
-	metricsHandler := http.NotFoundHandler()
+	// 3. Prometheus metrics handler at /metrics
+	metricsHandler := promhttp.Handler()
 
 	// 4. Собираем middleware (логирование, CORS и т.д.) через пакет myhttp
 	middlewares := myhttp.CollectHandlers(

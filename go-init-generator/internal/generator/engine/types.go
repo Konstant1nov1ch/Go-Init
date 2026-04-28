@@ -3,6 +3,9 @@ package engine
 import (
 	"strings"
 
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
+
 	"go-init-gen/internal/eventdata"
 	"go-init-gen/internal/generator/engine/generators/features"
 )
@@ -176,12 +179,14 @@ func ToCamelCase(s string) string {
 	// Split into words
 	words := strings.Fields(s)
 
+	title := cases.Title(language.English)
 	// Convert to camel case
 	for i, word := range words {
+		lw := strings.ToLower(word)
 		if i == 0 {
-			words[i] = strings.ToLower(word)
+			words[i] = lw
 		} else {
-			words[i] = strings.Title(strings.ToLower(word))
+			words[i] = title.String(lw)
 		}
 	}
 

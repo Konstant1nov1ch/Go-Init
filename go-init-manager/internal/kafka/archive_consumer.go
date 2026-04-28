@@ -9,6 +9,8 @@ import (
 	dbRepo "go-init/internal/database"
 	"go-init/internal/eventdata"
 	"go-init/internal/graphql"
+	"go-init/internal/metrics"
+	"go-init/internal/tracing"
 
 	"github.com/google/uuid"
 	"gitlab.com/go-init/go-init-common/default/logger"
@@ -30,12 +32,17 @@ func NewArchiveConsumerService(log *logger.Logger, repository dbRepo.GoInitManag
 
 // Work реализует интерфейс ConsumerWorker для обработки сообщений из Kafka
 func (s *ArchiveConsumerService) Work(ctx context.Context, value []byte) error {
+	ctx, consumeSpan := tracing.StartKafkaConsumeSpan(ctx, eventdata.DoneTopicID)
+	defer consumeSpan.End()
+
 	s.log.InfoContext(ctx, "Processing Kafka message",
 		logger.String("value", string(value)))
 
 	// Парсим CloudEvent
 	var cloudEvent eventdata.CloudEvent
 	if err := json.Unmarshal(value, &cloudEvent); err != nil {
+		metrics.KafkaMessagesConsumedTotal.WithLabelValues(eventdata.DoneTopicID, "error").Inc()
+		tracing.EndError(consumeSpan, err)
 		s.log.ErrorContext(ctx, "Ошибка парсинга CloudEvent",
 			logger.Error(err),
 			logger.String("raw_message", string(value)))
@@ -45,6 +52,7 @@ func (s *ArchiveConsumerService) Work(ctx context.Context, value []byte) error {
 	// Парсим поле data, которое содержит метаданные архива
 	var metadata eventdata.ArchiveMetadata
 	if err := json.Unmarshal(cloudEvent.Data, &metadata); err != nil {
+		tracing.EndError(consumeSpan, err)
 		s.log.ErrorContext(ctx, "Ошибка парсинга метаданных архива",
 			logger.Error(err),
 			logger.String("data_field", string(cloudEvent.Data)))
@@ -79,6 +87,7 @@ func (s *ArchiveConsumerService) Work(ctx context.Context, value []byte) error {
 		objectID := strings.TrimSuffix(metadata.ObjectName, ".zip")
 		requestUUID, err = uuid.Parse(objectID)
 		if err != nil {
+			tracing.EndError(consumeSpan, err)
 			s.log.ErrorContext(ctx, "Недействительный UUID в имени объекта",
 				logger.String("object_name", metadata.ObjectName),
 				logger.Error(err))
@@ -90,28 +99,44 @@ func (s *ArchiveConsumerService) Work(ctx context.Context, value []byte) error {
 
 	// Проверяем, что у нас есть действительный UUID
 	if requestUUID == uuid.Nil {
+		err := fmt.Errorf("failed to extract request UUID from message")
+		tracing.EndError(consumeSpan, err)
 		s.log.ErrorContext(ctx, "Не удалось получить UUID запроса ни из ID, ни из ObjectName")
-		return fmt.Errorf("failed to extract request UUID from message")
+		return err
 	}
 
 	// Обновление статуса на COMPLETED
-	if err := s.repository.UpdateTemplateStatusByUUID(ctx, requestUUID, graphql.StatusCompleted); err != nil {
-		s.log.ErrorContext(ctx, "Не удалось обновить статус шаблона на COMPLETED",
-			logger.Error(err),
-			logger.String("template_uuid", requestUUID.String()))
-		return err
+	{
+		ctx, dbSpan := tracing.StartDBSpan(ctx, "UpdateTemplateStatusByUUID")
+		defer dbSpan.End()
+		if err := s.repository.UpdateTemplateStatusByUUID(ctx, requestUUID, graphql.StatusCompleted); err != nil {
+			tracing.EndError(dbSpan, err)
+			tracing.EndError(consumeSpan, err)
+			metrics.KafkaMessagesConsumedTotal.WithLabelValues(eventdata.DoneTopicID, "error").Inc()
+			s.log.ErrorContext(ctx, "Не удалось обновить статус шаблона на COMPLETED",
+				logger.Error(err),
+				logger.String("template_uuid", requestUUID.String()))
+			return err
+		}
 	}
+	metrics.KafkaMessagesConsumedTotal.WithLabelValues(eventdata.DoneTopicID, "success").Inc()
 	s.log.InfoContext(ctx, "Статус шаблона обновлен на COMPLETED",
 		logger.String("template_uuid", requestUUID.String()))
 
 	// Обновление URL архива
 	if metadata.PresignedURL != "" {
-		if err := s.repository.UpdateZipUrl(ctx, requestUUID, metadata.PresignedURL); err != nil {
-			s.log.ErrorContext(ctx, "Не удалось обновить URL архива шаблона",
-				logger.Error(err),
-				logger.String("template_uuid", requestUUID.String()),
-				logger.String("presigned_url", metadata.PresignedURL))
-			return err
+		{
+			ctx, dbSpan := tracing.StartDBSpan(ctx, "UpdateZipUrl")
+			defer dbSpan.End()
+			if err := s.repository.UpdateZipUrl(ctx, requestUUID, metadata.PresignedURL); err != nil {
+				tracing.EndError(dbSpan, err)
+				tracing.EndError(consumeSpan, err)
+				s.log.ErrorContext(ctx, "Не удалось обновить URL архива шаблона",
+					logger.Error(err),
+					logger.String("template_uuid", requestUUID.String()),
+					logger.String("presigned_url", metadata.PresignedURL))
+				return err
+			}
 		}
 		s.log.InfoContext(ctx, "URL архива шаблона обновлен",
 			logger.String("template_uuid", requestUUID.String()),

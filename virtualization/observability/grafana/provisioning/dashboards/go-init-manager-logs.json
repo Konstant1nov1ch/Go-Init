@@ -1,0 +1,130 @@
+{
+  "title": "go-init-manager / Logs",
+  "uid": "go-init-manager-logs",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "10s",
+  "time": { "from": "now-1h", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Log Rate (lines/s)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "go-init-loki" },
+          "expr": "sum(rate({service=\"go_init_manager\"}[1m])) by (level)",
+          "legendFormat": "{{level}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "palette-classic" },
+          "custom": { "fillOpacity": 10 }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Error Rate (lines/s)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 6, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "go-init-loki" },
+          "expr": "sum(rate({service=\"go_init_manager\", level=\"ERROR\"}[1m]))",
+          "legendFormat": "ERROR"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "fixed", "fixedColor": "red" },
+          "custom": { "fillOpacity": 15 }
+        }
+      }
+    },
+    {
+      "id": 3,
+      "title": "Warn Rate (lines/s)",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 6, "w": 12, "h": 6 },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "go-init-loki" },
+          "expr": "sum(rate({service=\"go_init_manager\", level=\"WARN\"}[1m]))",
+          "legendFormat": "WARN"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": { "mode": "fixed", "fixedColor": "orange" },
+          "custom": { "fillOpacity": 15 }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "title": "All Logs",
+      "type": "logs",
+      "gridPos": { "x": 0, "y": 12, "w": 24, "h": 14 },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "go-init-loki" },
+          "expr": "{service=\"go_init_manager\"}",
+          "legendFormat": ""
+        }
+      ],
+      "options": {
+        "dedupStrategy": "none",
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      }
+    },
+    {
+      "id": 5,
+      "title": "Error Logs",
+      "type": "logs",
+      "gridPos": { "x": 0, "y": 26, "w": 24, "h": 10 },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "go-init-loki" },
+          "expr": "{service=\"go_init_manager\", level=\"ERROR\"}",
+          "legendFormat": ""
+        }
+      ],
+      "options": {
+        "dedupStrategy": "none",
+        "showLabels": true,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      }
+    },
+    {
+      "id": 6,
+      "title": "Kafka Events Log",
+      "type": "logs",
+      "gridPos": { "x": 0, "y": 36, "w": 24, "h": 10 },
+      "targets": [
+        {
+          "datasource": { "type": "loki", "uid": "go-init-loki" },
+          "expr": "{service=\"go_init_manager\"} |~ \"(?i)(kafka|topic|produce|consume|archive)\"",
+          "legendFormat": ""
+        }
+      ],
+      "options": {
+        "dedupStrategy": "none",
+        "showLabels": false,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      }
+    }
+  ]
+}

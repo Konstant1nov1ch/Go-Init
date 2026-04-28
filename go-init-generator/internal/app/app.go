@@ -4,13 +4,11 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"time"
 
 	"go-init-gen/config"
 	"go-init-gen/internal/api/grpc"
 	"go-init-gen/internal/work"
 
-	database "gitlab.com/go-init/go-init-common/default/db/pg/orm"
 	"gitlab.com/go-init/go-init-common/default/grpcpkg"
 	"gitlab.com/go-init/go-init-common/default/kafka"
 
@@ -21,17 +19,11 @@ import (
 type App struct {
 	cfg             *config.AppConfig
 	log             *logger.Logger
-	db              *database.AgentImpl
 	KafkaConsumer   *kafka.ClientConfig
 	worker          *work.Worker
 	publisherClient *grpc.PublisherClient
 	cancelFunc      context.CancelFunc
 }
-
-const (
-	serviceName     = "go-init-generator"
-	shutDownTimeOut = time.Second * 5
-)
 
 func New(ctx context.Context) (*App, error) {
 	ctx, cancel := context.WithCancel(ctx)
@@ -188,8 +180,5 @@ func (a *App) Run() error {
 		}
 	}()
 
-	select {
-	case err := <-errChan:
-		return err
-	}
+	return <-errChan
 }

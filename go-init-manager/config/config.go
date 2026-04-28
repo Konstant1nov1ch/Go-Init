@@ -19,6 +19,7 @@ type AppConfig struct {
 	HttpServ myserver.Config      `yaml:"http_server"`
 	GrpcServ grpcpkg.ServerConfig `yaml:"grpc_server"`
 	Kafka    kafka.Config         `yaml:"kafka"`
+	Tracing  TracingConfig        `yaml:"tracing"`
 }
 
 func GetConfig() *AppConfig {
