@@ -1,0 +1,44 @@
+---
+- ansible.builtin.import_tasks: precheck.yml
+
+- name: Ensure bin directory exists
+  ansible.builtin.file:
+    path: "{{ bin_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: Ensure staging directory exists
+  ansible.builtin.file:
+    path: "{{ staging_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: Detect system architecture
+  ansible.builtin.set_fact:
+    tools_arch: "{{ 'arm64' if ansible_architecture == 'aarch64' else 'amd64' }}"
+
+- name: Install kubectl
+  when: kubectl_installed.rc != 0
+  block:
+    - name: Download kubectl
+      ansible.builtin.get_url:
+        url: "https://dl.k8s.io/release/{{ kubectl_release }}/bin/linux/{{ tools_arch }}/kubectl"
+        dest: "{{ bin_dir }}/kubectl"
+        mode: "0755"
+
+- name: Install k3d
+  when: k3d_installed.rc != 0
+  block:
+    - name: Download k3d
+      ansible.builtin.get_url:
+        url: "https://github.com/k3d-io/k3d/releases/download/{{ k3d_release }}/k3d-linux-{{ tools_arch }}"
+        dest: "{{ bin_dir }}/k3d"
+        mode: "0755"
+
+- name: Verify docker is available
+  ansible.builtin.command: docker info
+  register: docker_info
+  changed_when: false
+  failed_when: docker_info.rc != 0
+  environment:
+    PATH: "{{ bin_dir }}:{{ ansible_env.PATH }}"

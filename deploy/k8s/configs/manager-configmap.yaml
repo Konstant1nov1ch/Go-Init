@@ -1,0 +1,50 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: manager-config
+data:
+  config.yml: |
+    http_server:
+      env: k8s
+      port: 60013
+      timeout: 0s
+      idle_timeout: 60s
+      name: go-init-manager
+      version: dev
+
+    grpc_server:
+      port: 60014
+
+    logger:
+      level: DEBUG
+      format: json
+
+    postgres_db:
+      host: postgres
+      port: 5432
+      database_name: go_init_manager_db
+      user: go_init_usr
+      password: 1234
+      ssl: disable
+      schema: public
+      timezone: "Europe/Moscow"
+      auto_migrate: true
+
+    kafka:
+      enabled: true
+      addresses:
+        - "go-init-kafka:29092"
+      producer_config:
+        enabled: true
+        topics:
+          - id: go-init-processing
+            name: go-init-processing
+            is_enabled: true
+      consumer_config:
+        enabled: true
+        auto_commit: false
+        group_id: go-init-manager-group
+        topics:
+          - id: go-init-done
+            name: go-init-done
+            is_enabled: true

@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: go-init-publisher
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: go-init-publisher
+  template:
+    metadata:
+      labels:
+        app: go-init-publisher
+    spec:
+      initContainers:
+        - name: wait-postgres
+          image: busybox:1.36
+          command: ["sh", "-c", "until nc -z postgres 5432; do sleep 2; done"]
+        - name: wait-kafka
+          image: busybox:1.36
+          command: ["sh", "-c", "until nc -z go-init-kafka 29092; do sleep 2; done"]
+        - name: wait-minio
+          image: busybox:1.36
+          command: ["sh", "-c", "until nc -z go-init-minio 9000; do sleep 2; done"]
+      containers:
+        - name: publisher
+          image: go-init/publisher:local
+          imagePullPolicy: IfNotPresent
+          command: ["/bin/sh", "-c", "mkdir -p /service/storage && exec /service/service --config /service/config.yml"]
+          ports:
+            - containerPort: 60024
+            - containerPort: 8086
+          env:
+            - name: STORAGE_PATH
+              value: /service/storage
+          volumeMounts:
+            - name: config
+              mountPath: /service/config.yml
+              subPath: config.yml
+            - name: storage
+              mountPath: /service/storage
+          readinessProbe:
+            tcpSocket:
+              port: 60024
+            initialDelaySeconds: 10
+            periodSeconds: 5
+      volumes:
+        - name: config
+          configMap:
+            name: publisher-config
+        - name: storage
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: go-init-publisher
+spec:
+  type: LoadBalancer
+  selector:
+    app: go-init-publisher
+  ports:
+    - name: grpc
+      port: 60024
+      targetPort: 60024
+    - name: http
+      port: 8086
+      targetPort: 8086

@@ -1,0 +1,8 @@
+---
+k3d_port_maps:
+  - "5173:5173@loadbalancer"
+  - "60013:60013@loadbalancer"
+  - "8086:8086@loadbalancer"
+  - "9000:9000@loadbalancer"
+  - "8082:8082@loadbalancer"
+  - "9092:9092@loadbalancer"

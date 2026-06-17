@@ -1,0 +1,6 @@
+---
+- name: Build and import Docker images
+  ansible.builtin.include_tasks: build_one.yml
+  loop: "{{ docker_images }}"
+  loop_control:
+    loop_var: image

@@ -1,0 +1,13 @@
+---
+- name: Deploy Go-Init to Kubernetes
+  hosts: localhost
+  gather_facts: false
+  roles:
+    - role: tools
+    - role: k8s_deploy
+  post_tasks:
+    - name: Endpoints
+      ansible.builtin.debug:
+        msg: |
+          Deploy complete. Port-forward: ansible-playbook playbooks/port-forward.yml
+          Frontend: http://localhost:5173  |  GraphQL: http://localhost:60013/graphql

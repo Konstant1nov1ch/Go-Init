@@ -1,0 +1,43 @@
+---
+- name: List existing k3d clusters
+  ansible.builtin.command: k3d cluster list --no-headers
+  register: k3d_clusters
+  changed_when: false
+  environment:
+    PATH: "{{ bin_dir }}:{{ ansible_env.PATH }}"
+
+- name: Build k3d port mapping arguments
+  ansible.builtin.set_fact:
+    k3d_port_args: "{{ k3d_port_args | default([]) + ['--port', item] }}"
+  loop: "{{ k3d_port_maps }}"
+  when: use_port_maps | bool
+
+- name: Create k3d cluster
+  ansible.builtin.command:
+    argv: "{{ ['k3d', 'cluster', 'create', cluster_name, '--agents', worker_nodes | string, '--wait'] + (k3d_port_args | default([])) }}"
+  when: cluster_name not in k3d_clusters.stdout
+  environment:
+    PATH: "{{ bin_dir }}:{{ ansible_env.PATH }}"
+
+- name: Merge kubeconfig
+  ansible.builtin.command:
+    argv:
+      - k3d
+      - kubeconfig
+      - merge
+      - "{{ cluster_name }}"
+      - --kubeconfig-merge-default
+      - --kubeconfig-switch-context
+  changed_when: false
+  environment:
+    PATH: "{{ bin_dir }}:{{ ansible_env.PATH }}"
+
+- name: Verify nodes are ready
+  ansible.builtin.command: kubectl get nodes --no-headers
+  register: k3d_nodes
+  changed_when: false
+  retries: 12
+  delay: 5
+  until: k3d_nodes.stdout_lines | length == (worker_nodes | int + 1)
+  environment:
+    PATH: "{{ bin_dir }}:{{ ansible_env.PATH }}"

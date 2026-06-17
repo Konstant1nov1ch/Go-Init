@@ -1,0 +1,12 @@
+---
+- import_playbook: teardown.yml
+
+- name: Delete k3d cluster
+  hosts: localhost
+  gather_facts: false
+  roles:
+    - role: tools
+  tasks:
+    - ansible.builtin.include_role:
+        name: k3d_cluster
+        tasks_from: delete

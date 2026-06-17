@@ -1,0 +1,7 @@
+---
+- name: Teardown Go-Init Kubernetes resources
+  hosts: localhost
+  gather_facts: false
+  roles:
+    - role: tools
+    - role: k8s_teardown

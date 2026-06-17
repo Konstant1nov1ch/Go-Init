@@ -1,0 +1,32 @@
+---
+- name: Port-forward Go-Init services to localhost
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Start port-forwards (runs until Ctrl+C)
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - port-forward
+          - -n
+          - "{{ namespace }}"
+          - "svc/{{ item.service }}"
+          - "{{ item.local }}:{{ item.remote }}"
+      loop: "{{ port_forwards }}"
+      async: 86400
+      poll: 0
+      environment:
+        PATH: "{{ bin_dir }}:{{ ansible_env.PATH }}"
+
+    - name: Endpoints
+      ansible.builtin.debug:
+        msg: |
+          Port-forwards started in background.
+          Frontend:    http://localhost:5173
+          GraphQL API: http://localhost:60013/graphql
+          Publisher:   http://localhost:8086
+          MinIO:       http://localhost:9000
+          Kafka UI:    http://localhost:8082
+          Kafka:       localhost:9092
+
+          Stop: pkill -f 'kubectl port-forward'

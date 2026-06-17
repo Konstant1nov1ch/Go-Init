@@ -1,0 +1,90 @@
+---
+- name: Apply Kubernetes manifests
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - apply
+      - -k
+      - "{{ k8s_dir }}"
+  register: kubectl_apply
+  changed_when: "'created' in kubectl_apply.stdout or 'configured' in kubectl_apply.stdout"
+  environment:
+    PATH: "{{ bin_dir }}:{{ ansible_env.PATH }}"
+
+- name: Wait for PostgreSQL
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - rollout
+      - status
+      - statefulset/postgres
+      - -n
+      - "{{ namespace }}"
+      - --timeout=300s
+  changed_when: false
+  environment:
+    PATH: "{{ bin_dir }}:{{ ansible_env.PATH }}"
+
+- name: Wait for infrastructure deployments
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - rollout
+      - status
+      - "deployment/{{ item }}"
+      - -n
+      - "{{ namespace }}"
+      - --timeout=300s
+  loop: "{{ infra_deployments }}"
+  changed_when: false
+  environment:
+    PATH: "{{ bin_dir }}:{{ ansible_env.PATH }}"
+
+- name: Wait for init jobs
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - wait
+      - --for=condition=complete
+      - "job/{{ item }}"
+      - -n
+      - "{{ namespace }}"
+      - --timeout=300s
+  loop: "{{ init_jobs }}"
+  register: init_job_wait
+  failed_when: false
+  changed_when: false
+  environment:
+    PATH: "{{ bin_dir }}:{{ ansible_env.PATH }}"
+
+- name: Wait for application deployments
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - rollout
+      - status
+      - "deployment/{{ item }}"
+      - -n
+      - "{{ namespace }}"
+      - --timeout=600s
+  loop: "{{ app_deployments }}"
+  changed_when: false
+  environment:
+    PATH: "{{ bin_dir }}:{{ ansible_env.PATH }}"
+
+- name: Show pod status
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - get
+      - pods
+      - -n
+      - "{{ namespace }}"
+  register: pod_status
+  changed_when: false
+  environment:
+    PATH: "{{ bin_dir }}:{{ ansible_env.PATH }}"
+
+- name: Print pod status
+  ansible.builtin.debug:
+    msg: "{{ pod_status.stdout_lines }}"

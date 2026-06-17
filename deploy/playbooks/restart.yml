@@ -1,0 +1,35 @@
+---
+- name: Restart application deployments
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Restart apps
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - rollout
+          - restart
+          - deployment
+          - -n
+          - "{{ namespace }}"
+          - go-init-manager
+          - go-init-generator
+          - go-init-publisher
+          - go-init-frontend
+      environment:
+        PATH: "{{ bin_dir }}:{{ ansible_env.PATH }}"
+
+    - name: Wait for rollouts
+      ansible.builtin.command:
+        argv:
+          - kubectl
+          - rollout
+          - status
+          - "deployment/{{ item }}"
+          - -n
+          - "{{ namespace }}"
+          - --timeout=600s
+      loop: "{{ app_deployments }}"
+      changed_when: false
+      environment:
+        PATH: "{{ bin_dir }}:{{ ansible_env.PATH }}"

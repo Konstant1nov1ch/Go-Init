@@ -1,0 +1,26 @@
+---
+- name: "Build {{ image.name }}"
+  ansible.builtin.command:
+    argv:
+      - docker
+      - build
+      - -t
+      - "{{ image.name }}"
+      - -f
+      - "{{ image.dockerfile }}"
+      - .
+    chdir: "{{ repo_root }}/{{ image.context }}"
+  environment:
+    PATH: "{{ bin_dir }}:{{ ansible_env.PATH }}"
+
+- name: "Import {{ image.name }} into k3d"
+  ansible.builtin.command:
+    argv:
+      - k3d
+      - image
+      - import
+      - "{{ image.name }}"
+      - -c
+      - "{{ cluster_name }}"
+  environment:
+    PATH: "{{ bin_dir }}:{{ ansible_env.PATH }}"

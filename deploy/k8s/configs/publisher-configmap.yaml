@@ -1,0 +1,56 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: publisher-config
+data:
+  config.yml: |
+    http_server:
+      env: k8s
+      port: 8086
+      timeout: 0s
+      idle_timeout: 60s
+      name: go-init-publisher
+      version: dev
+
+    grpc_server:
+      port: 60024
+
+    logger:
+      level: DEBUG
+      format: json
+
+    postgres_db:
+      host: postgres
+      port: 5432
+      database_name: go_init_manager_db
+      user: go_init_usr
+      password: 1234
+      ssl: disable
+      schema: go_init
+      timezone: "Europe/Moscow"
+      auto_migrate: true
+
+    kafka:
+      enabled: true
+      addresses:
+        - "go-init-kafka:29092"
+      producer_config:
+        enabled: true
+        topics:
+          - id: go-init-done
+            name: go-init-done
+            is_enabled: true
+      consumer_config:
+        enabled: false
+        auto_commit: false
+
+    minio:
+      endpoint: "go-init-minio:9000"
+      access_key_id: B6NZaLCC7AmyqSkdB2Rr
+      secret_access_key: C8gZg0GSg31mEUs3BRVj7Dh5nIZ4HCvMPEHEamYq
+      use_ssl: false
+      default_bucket: go-init-archives
+      external_url: "http://localhost:9000"
+
+    storage:
+      path: "/service/storage"

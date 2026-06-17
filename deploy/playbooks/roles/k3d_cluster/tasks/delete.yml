@@ -1,0 +1,13 @@
+---
+- name: Delete k3d cluster
+  ansible.builtin.command:
+    argv:
+      - k3d
+      - cluster
+      - delete
+      - "{{ cluster_name }}"
+  register: cluster_delete
+  failed_when: false
+  changed_when: cluster_delete.rc == 0
+  environment:
+    PATH: "{{ bin_dir }}:{{ ansible_env.PATH }}"

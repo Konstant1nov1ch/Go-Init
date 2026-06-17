@@ -1,0 +1,19 @@
+---
+- name: Setup Go-Init on local k3d cluster
+  hosts: localhost
+  gather_facts: true
+  roles:
+    - role: tools
+    - role: k3d_cluster
+    - role: images
+    - role: k8s_deploy
+  post_tasks:
+    - name: Endpoints
+      ansible.builtin.debug:
+        msg: |
+          Go-Init deployed.
+          Port-forward (separate terminal): ansible-playbook playbooks/port-forward.yml
+          Frontend:    http://localhost:5173
+          GraphQL API: http://localhost:60013/graphql
+          Kafka UI:    http://localhost:8082
+          MinIO:       http://localhost:9000

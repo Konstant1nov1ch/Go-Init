@@ -1,0 +1,22 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: go-init
+
+resources:
+  - namespace.yaml
+  - secrets.yaml
+  - configs/manager-configmap.yaml
+  - configs/generator-configmap.yaml
+  - configs/publisher-configmap.yaml
+  - infra/postgres.yaml
+  - infra/zookeeper.yaml
+  - infra/kafka.yaml
+  - infra/kafka-init-job.yaml
+  - infra/minio.yaml
+  - infra/minio-init-job.yaml
+  - infra/kafka-ui.yaml
+  - apps/manager.yaml
+  - apps/generator.yaml
+  - apps/publisher.yaml
+  - apps/frontend.yaml

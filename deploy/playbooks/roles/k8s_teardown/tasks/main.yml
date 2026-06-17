@@ -1,0 +1,12 @@
+---
+- name: Delete Kubernetes resources
+  ansible.builtin.command:
+    argv:
+      - kubectl
+      - delete
+      - -k
+      - "{{ k8s_dir }}"
+      - --ignore-not-found
+  changed_when: false
+  environment:
+    PATH: "{{ bin_dir }}:{{ ansible_env.PATH }}"

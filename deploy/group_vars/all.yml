@@ -1,0 +1,53 @@
+---
+deploy_dir: "{{ inventory_dir }}/.."
+repo_root: "{{ deploy_dir }}/.."
+k8s_dir: "{{ deploy_dir }}/k8s"
+
+cluster_name: go-init
+namespace: go-init
+worker_nodes: 2
+use_port_maps: false
+
+bin_dir: "{{ ansible_env.HOME }}/.local/bin"
+staging_dir: "{{ ansible_env.HOME }}/.cache/go-init-deploy"
+
+kubectl_release: v1.31.5
+k3d_release: v5.8.3
+
+infra_deployments:
+  - zookeeper
+  - go-init-kafka
+  - go-init-minio
+  - kafka-ui
+
+app_deployments:
+  - go-init-publisher
+  - go-init-manager
+  - go-init-generator
+  - go-init-frontend
+
+init_jobs:
+  - kafka-init-topics
+  - minio-init-bucket
+
+docker_images:
+  - name: go-init/manager:local
+    context: go-init-manager
+    dockerfile: build/docker/Dockerfile
+  - name: go-init/generator:local
+    context: go-init-generator
+    dockerfile: build/docker/Dockerfile
+  - name: go-init/publisher:local
+    context: go-init-publisher
+    dockerfile: build/docker/Dockerfile
+  - name: go-init/frontend:local
+    context: frontend
+    dockerfile: docker/Dockerfile
+
+port_forwards:
+  - { service: go-init-frontend, local: 5173, remote: 5173 }
+  - { service: go-init-manager, local: 60013, remote: 60013 }
+  - { service: go-init-publisher, local: 8086, remote: 8086 }
+  - { service: go-init-minio, local: 9000, remote: 9000 }
+  - { service: kafka-ui, local: 8082, remote: 8082 }
+  - { service: go-init-kafka, local: 9092, remote: 29092 }

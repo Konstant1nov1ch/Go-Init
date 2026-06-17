@@ -1,0 +1,7 @@
+---
+- name: Build and import Docker images
+  hosts: localhost
+  gather_facts: false
+  roles:
+    - role: tools
+    - role: images
